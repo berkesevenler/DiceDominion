@@ -6,11 +6,11 @@ function toggleTheme() {
 let boardSize = 10;
 let board = [];
 let currentPlayer = 1;
-
 let dice1, dice2;
-let hasRolledDice = false;
+let isPreviewing = false;
 let canPlaceBlockFlag = false;
 let rotation = 0;
+let hasRolledDice = false;
 
 const skipTurnLimit = 3;
 const skipTurnCount = {
@@ -73,10 +73,6 @@ function createBoard() {
       boardDiv.appendChild(cell);
     }
   }
-
-  document.getElementById(
-    "status"
-  ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
 }
 
 function rollDice() {
@@ -117,7 +113,10 @@ function previewBlock(event) {
   const previewClass = currentPlayer === 1 ? "preview-blue" : "preview-red";
   const [width, height] = applyRotation(dice1, dice2);
 
-  if (isWithinBounds(startX, startY, width, height)) {
+  if (
+    isWithinBounds(startX, startY, width, height) &&
+    isConnected(startX, startY, width, height)
+  ) {
     for (let row = startY; row < startY + height; row++) {
       for (let col = startX; col < startX + width; col++) {
         if (board[row][col] === null) {
@@ -127,13 +126,16 @@ function previewBlock(event) {
         }
       }
     }
+    isPreviewing = true;
   }
 }
 
 function clearPreview() {
+  if (!isPreviewing) return;
   document
     .querySelectorAll(".preview-blue, .preview-red")
     .forEach((cell) => cell.classList.remove("preview-blue", "preview-red"));
+  isPreviewing = false;
 }
 
 function placeBlock(event) {
@@ -143,37 +145,29 @@ function placeBlock(event) {
   const startY = parseInt(event.target.dataset.row);
   const [width, height] = applyRotation(dice1, dice2);
 
-  if (!isWithinBounds(startX, startY, width, height)) {
+  if (
+    isWithinBounds(startX, startY, width, height) &&
+    isConnected(startX, startY, width, height) &&
+    canPlaceBlock(startX, startY, width, height)
+  ) {
+    for (let row = startY; row < startY + height; row++) {
+      for (let col = startX; col < startX + width; col++) {
+        board[row][col] = currentPlayer;
+        document
+          .querySelector(`[data-row="${row}"][data-col="${col}"]`)
+          .classList.add(`player${currentPlayer}`);
+      }
+    }
+
+    if (checkWinCondition()) {
+      declareWinner(currentPlayer);
+    } else {
+      endTurn();
+    }
+  } else {
     document.getElementById(
       "status"
     ).innerText = `Player ${currentPlayer} cannot place block here.`;
-    return;
-  }
-
-  for (let row = startY; row < startY + height; row++) {
-    for (let col = startX; col < startX + width; col++) {
-      if (board[row][col] !== null) {
-        document.getElementById(
-          "status"
-        ).innerText = `Player ${currentPlayer} cannot place block here (overlap).`;
-        return;
-      }
-    }
-  }
-
-  for (let row = startY; row < startY + height; row++) {
-    for (let col = startX; col < startX + width; col++) {
-      board[row][col] = currentPlayer;
-      document
-        .querySelector(`[data-row='${row}'][data-col='${col}']`)
-        .classList.add(`player${currentPlayer}`);
-    }
-  }
-
-  if (checkWinCondition()) {
-    declareWinner(currentPlayer);
-  } else {
-    endTurn();
   }
 }
 
@@ -184,8 +178,52 @@ function applyRotation(width, height) {
   return [width, height];
 }
 
-function isWithinBounds(x, y, w, h) {
-  return x >= 0 && y >= 0 && x + w <= boardSize && y + h <= boardSize;
+function isWithinBounds(x, y, width, height) {
+  return x >= 0 && y >= 0 && x + width <= boardSize && y + height <= boardSize;
+}
+
+function isConnected(x, y, width, height) {
+  if (getPlacedBlocks(currentPlayer).length === 0) {
+    return (
+      (currentPlayer === 1 && x === 0 && y === 0) ||
+      (currentPlayer === 2 &&
+        x + width - 1 === boardSize - 1 &&
+        y + height - 1 === boardSize - 1)
+    );
+  }
+
+  for (let row = y; row < y + height; row++) {
+    for (let col = x; col < x + width; col++) {
+      if (isAdjacentToCurrentPlayer(row, col)) return true;
+    }
+  }
+  return false;
+}
+
+function isAdjacentToCurrentPlayer(row, col) {
+  const adjacentPositions = [
+    [row - 1, col],
+    [row + 1, col],
+    [row, col - 1],
+    [row, col + 1],
+  ];
+  return adjacentPositions.some(
+    ([r, c]) => board[r] && board[r][c] === currentPlayer
+  );
+}
+
+function getPlacedBlocks(player) {
+  return board.flat().filter((cell) => cell === player);
+}
+
+function canPlaceBlock(x, y, width, height) {
+  for (let row = y; row < y + height; row++) {
+    for (let col = x; col < x + width; col++) {
+      if (row >= boardSize || col >= boardSize || board[row][col] !== null)
+        return false;
+    }
+  }
+  return true;
 }
 
 function checkWinCondition() {
@@ -274,23 +312,12 @@ function canPlayerPlace() {
   for (let row = 0; row < boardSize; row++) {
     for (let col = 0; col < boardSize; col++) {
       for (let rot of [0, 90, 180, 270]) {
-        const [width, height] =
-          rot === 90 || rot === 270 ? [dice2, dice1] : [dice1, dice2];
-
-        if (col + width <= boardSize && row + height <= boardSize) {
-          let canPlaceHere = true;
-          for (let r = row; r < row + height; r++) {
-            for (let c = col; c < col + width; c++) {
-              if (board[r][c] !== null) {
-                canPlaceHere = false;
-                break;
-              }
-            }
-            if (!canPlaceHere) break;
-          }
-          if (canPlaceHere) {
-            return true;
-          }
+        const [width, height] = applyRotation(dice1, dice2);
+        if (
+          canPlaceBlock(col, row, width, height) &&
+          isConnected(col, row, width, height)
+        ) {
+          return true;
         }
       }
     }
