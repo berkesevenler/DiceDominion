@@ -15,10 +15,24 @@
     style="position: absolute; top: 10px; right: 10px; cursor: pointer;">
     <button onclick="toggleTheme()">Toggle Dark/Light Mode</button>
   </div>
-  <div id="container" style="display: block;">
-    <h1>Dice Dominion</h1>
-    <p>Welcome to the game!</p>
+
+  <div id="menu">
+    <h1>Welcome to Dice Dominion</h1>
+    <p>Select your preferences to start the game:</p>
+    <label for="boardSizeInput">Board Size:</label>
+    <input type="number" id="boardSizeInput" min="5" max="20" value="10"><br><br>
+    <label for="player1Color">Player 1 Color:</label>
+    <input type="color" id="player1Color" value="#0073e6"><br><br>
+    <label for="player2Color">Player 2 Color:</label>
+    <input type="color" id="player2Color" value="#ff4c4c"><br><br>
+    <button onclick="startGame()">Start Game</button>
   </div>
+
+  <div id="container">
+    <h1>Dice Dominion</h1>
+    </div id="board"></div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
