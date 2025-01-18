@@ -9,8 +9,11 @@ let board = [];
 let currentPlayer = 1;
 
 let dice1, dice2;
-
 let hasRolledDice = false;
+
+let rotation = 0;
+
+let canPlaceBlockFlag = false;
 
 function startGame() {
     boardSize = parseInt(document.getElementById("boardSizeInput").value);
@@ -34,6 +37,14 @@ function startGame() {
   createBoard();
   document.getElementById("status").innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
 }
+
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "r" || e.key === "R") {
+      rotation = (rotation + 90) % 360;
+      document.getElementById("status").innerText = `Rotated to ${rotation} degrees`;
+    }
+  });
 
 function createBoard() {
   const boardDiv = document.getElementById("board");
@@ -66,11 +77,94 @@ function rollDice() {
         return;
       }
 
-dice1 = Math.floor(Math.random() * 6) + 1;
-dice2 = Math.floor(Math.random() * 6) + 1;
-hasRolledDice = true;
+    dice1 = Math.floor(Math.random() * 6) + 1;
+    dice2 = Math.floor(Math.random() * 6) + 1;
+    hasRolledDice = true;
+    canPlaceBlockFlag = true;
+    rotation = 0;
 
-document.getElementById("status").innerText = 
-   `Player ${currentPlayer} rolled ${dice1}x${dice2}`;
+    document.getElementById("status").innerText = 
+     `Player ${currentPlayer} rolled ${dice1}x${dice2}`;
+
+   document.getElementById("controls").style.display = "block";
+   document.getElementById("currentPlayerDisplay").innerText = currentPlayer;
+   document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
 }
 
+
+function previewBlock(e) {
+    if (!canPlaceBlockFlag) return;
+    if (!dice1 || !dice2) return;
+  
+    const col = parseInt(e.target.dataset.col);
+    const row = parseInt(e.target.dataset.row);
+  
+    const [w, h] = applyRotation(dice1, dice2);
+  
+    if (row + h > boardSize || col + w > boardSize) return;
+  
+    for (let r = row; r < row + h; r++) {
+      for (let c = col; c < col + w; c++) {
+        const cell = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
+        if (board[r][c] === null) {
+          const previewClass = (currentPlayer === 1) ? 'preview-blue' : 'preview-red';
+          cell.classList.add(previewClass);
+        }
+      }
+    }
+  }
+  
+  function clearPreview() {
+    document.querySelectorAll('.preview-blue, .preview-red')
+      .forEach(cell => cell.classList.remove('preview-blue', 'preview-red'));
+  }
+  
+  function placeBlock(e) {
+    if (!canPlaceBlockFlag) return;
+  
+    const startCol = parseInt(e.target.dataset.col);
+    const startRow = parseInt(e.target.dataset.row);
+    const [w, h] = applyRotation(dice1, dice2);
+  
+    if (startRow + h > boardSize || startCol + w > boardSize) {
+      document.getElementById("status").innerText = 
+        `Player ${currentPlayer} cannot place block here (out of bounds).`;
+      return;
+    }
+  
+    for (let r = startRow; r < startRow + h; r++) {
+      for (let c = startCol; c < startCol + w; c++) {
+        if (board[r][c] !== null) {
+          document.getElementById("status").innerText = 
+            `Player ${currentPlayer} cannot place block here (overlap).`;
+          return;
+        }
+      }
+    }
+  
+    for (let r = startRow; r < startRow + h; r++) {
+      for (let c = startCol; c < startCol + w; c++) {
+        board[r][c] = currentPlayer;
+        document.querySelector(`[data-row='${r}'][data-col='${c}']`)
+          .classList.add(`player${currentPlayer}`);
+      }
+    }
+  
+    endTurn();
+  }
+  
+  function applyRotation(width, height) {
+    if (rotation === 90 || rotation === 270) {
+      return [height, width];
+    }
+    return [width, height];
+  }
+  
+  function endTurn() {
+    canPlaceBlockFlag = false;
+    hasRolledDice = false;
+    document.getElementById("controls").style.display = "none";
+    currentPlayer = (currentPlayer === 1) ? 2 : 1;
+    document.getElementById("status").innerText = 
+      `Player ${currentPlayer}'s turn. Roll the dice.`;
+  }
