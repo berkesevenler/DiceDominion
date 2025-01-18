@@ -38,9 +38,6 @@ function startGame() {
   document.getElementById("container").style.justifyContent = "center";
 
   createBoard();
-  document.getElementById(
-    "status"
-  ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
 }
 
 document.addEventListener("keydown", (e) => {
@@ -76,6 +73,10 @@ function createBoard() {
       boardDiv.appendChild(cell);
     }
   }
+
+  document.getElementById(
+    "status"
+  ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
 }
 
 function rollDice() {
@@ -103,6 +104,7 @@ function rollDice() {
     handleNoValidMoves();
   } else {
     hideSkipTurnButton();
+    hideDeclareWinnerButton();
   }
 }
 
@@ -115,7 +117,7 @@ function previewBlock(event) {
   const previewClass = currentPlayer === 1 ? "preview-blue" : "preview-red";
   const [width, height] = applyRotation(dice1, dice2);
 
-  if (startX + width <= boardSize && startY + height <= boardSize) {
+  if (isWithinBounds(startX, startY, width, height)) {
     for (let row = startY; row < startY + height; row++) {
       for (let col = startX; col < startX + width; col++) {
         if (board[row][col] === null) {
@@ -141,10 +143,10 @@ function placeBlock(event) {
   const startY = parseInt(event.target.dataset.row);
   const [width, height] = applyRotation(dice1, dice2);
 
-  if (startX + width > boardSize || startY + height > boardSize) {
+  if (!isWithinBounds(startX, startY, width, height)) {
     document.getElementById(
       "status"
-    ).innerText = `Player ${currentPlayer} cannot place block here (out of bounds).`;
+    ).innerText = `Player ${currentPlayer} cannot place block here.`;
     return;
   }
 
@@ -168,26 +170,35 @@ function placeBlock(event) {
     }
   }
 
-  endTurn();
-}
-
-function applyRotation(w, h) {
-  if (rotation === 90 || rotation === 270) {
-    return [h, w];
+  if (checkWinCondition()) {
+    declareWinner(currentPlayer);
+  } else {
+    endTurn();
   }
-  return [w, h];
 }
 
-function endTurn() {
-  currentPlayer = currentPlayer === 1 ? 2 : 1;
-  canPlaceBlockFlag = false;
-  hasRolledDice = false;
-  document.getElementById("controls").style.display = "none";
-  document.getElementById(
-    "status"
-  ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
-  clearPreview();
-  hideSkipTurnButton();
+function applyRotation(width, height) {
+  if (rotation === 90 || rotation === 270) {
+    return [height, width];
+  }
+  return [width, height];
+}
+
+function isWithinBounds(x, y, w, h) {
+  return x >= 0 && y >= 0 && x + w <= boardSize && y + h <= boardSize;
+}
+
+function checkWinCondition() {
+  const totalCells = boardSize * boardSize;
+  const playerCells = board
+    .flat()
+    .filter((cell) => cell === currentPlayer).length;
+  return playerCells >= totalCells / 2;
+}
+
+function declareWinner(winner) {
+  alert(`Player ${winner} wins!`);
+  location.reload();
 }
 
 function skipTurn() {
@@ -200,30 +211,63 @@ function skipTurn() {
     } skips remaining.`;
     endTurn();
   } else {
-    document.getElementById(
-      "status"
-    ).innerText = `Player ${currentPlayer} cannot skip anymore.`;
+    handleNoValidMoves();
   }
 }
 
 function handleNoValidMoves() {
-  if (skipTurnCount[currentPlayer] < skipTurnLimit) {
+  if (skipTurnCount[currentPlayer] >= skipTurnLimit && !canPlayerPlace()) {
+    const otherPlayer = currentPlayer === 1 ? 2 : 1;
     document.getElementById(
       "status"
-    ).innerText = `Player ${currentPlayer} cannot place block. You may skip your turn.`;
-    showSkipTurnButton();
+    ).innerText = `Player ${currentPlayer} cannot place block and has exhausted all skips. Player ${otherPlayer} wins.`;
+    showDeclareWinnerButton();
   } else {
-    document.getElementById(
-      "status"
-    ).innerText = `Player ${currentPlayer} cannot place block and has no skips left.`;
+    if (skipTurnCount[currentPlayer] < skipTurnLimit) {
+      document.getElementById(
+        "status"
+      ).innerText = `Player ${currentPlayer} cannot place block. You may skip your turn.`;
+      showSkipTurnButton();
+    }
   }
 }
 
+function endTurn() {
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
+  canPlaceBlockFlag = false;
+  hasRolledDice = false;
+  document.getElementById("controls").style.display = "none";
+  document.getElementById(
+    "status"
+  ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
+
+  hideSkipTurnButton();
+  hideDeclareWinnerButton();
+  clearPreview();
+}
+
 function showSkipTurnButton() {
-  document.getElementById("skipTurnButton").style.display = "block";
+  if (skipTurnCount[currentPlayer] < skipTurnLimit) {
+    document.getElementById("skipTurnButton").style.display = "block";
+  }
 }
 function hideSkipTurnButton() {
   document.getElementById("skipTurnButton").style.display = "none";
+}
+
+function showDeclareWinnerButton() {
+  const otherPlayer = currentPlayer === 1 ? 2 : 1;
+  document.getElementById("declareWinnerButton").style.display = "block";
+  document.getElementById("winnerPlayerDisplay").innerText = otherPlayer;
+}
+
+function hideDeclareWinnerButton() {
+  document.getElementById("declareWinnerButton").style.display = "none";
+}
+
+function declareOtherPlayerWinner() {
+  const otherPlayer = currentPlayer === 1 ? 2 : 1;
+  declareWinner(otherPlayer);
 }
 
 function canPlayerPlace() {
