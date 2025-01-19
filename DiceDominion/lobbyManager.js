@@ -22,14 +22,19 @@ export function displayPublicLobbies() {
       //empties lobbies first
       .sort((a, b) => a.playerCount - b.playerCount);
 
-      
+
     //displays sorted lobbies
     lobbiesArray.forEach(({code, playerCount}) => {
       const lobbyElement = document.createElement('div');
       lobbyElement.className = 'public-lobby-item';
+      const isLobbyFull = playerCount >= 2;
+      
       lobbyElement.innerHTML = `
         <span>Lobby: ${code} (${playerCount}/2 players)</span>
-        <button onclick="window.joinPublicLobby('${code}')">Join</button>
+        <button onclick="window.joinPublicLobby('${code}')" 
+                ${isLobbyFull ? 'disabled' : ''}>
+          ${isLobbyFull ? 'Join' : 'Join'}
+        </button>
       `;
       lobbiesDiv.appendChild(lobbyElement);
     });
