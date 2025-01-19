@@ -131,6 +131,8 @@ function startGame(join) {
         uid: auth.currentUser.uid,
       });
       writeData(`lobbies/${lobbyCode}/boardSize`, boardSize);
+      board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+      createBoard();
       document.getElementById("status").innerText = "You are Player 1!";
     } else if (!players.player2) {
       //assign player 2
@@ -138,7 +140,12 @@ function startGame(join) {
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
       });
-      boardSize=readData(`lobbies/${lobbyCode}/boardSize`);
+      readData(`lobbies/${lobbyCode}/boardSize`).then((size)=> {
+        boardSize=size;
+        board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+        createBoard();
+      });
+      
       document.getElementById("status").innerText = "You are Player 2!";
     } else {
       // lobby full
@@ -146,8 +153,7 @@ function startGame(join) {
       location.reload();
       return;
     }
-    board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
-    createBoard();
+
     displayTurnStatus(lobbyCode);
     displayGameOver(lobbyCode);
     writeData(`lobbies/${lobbyCode}/gameOver`, 0)
