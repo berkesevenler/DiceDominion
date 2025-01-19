@@ -157,6 +157,7 @@ body.dark-mode #instructions {
   background: #1e1e1e;
   color: #ffffff;
   box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+}
 
 .public-lobby-item {
   display: flex;
