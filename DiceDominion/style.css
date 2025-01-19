@@ -152,8 +152,28 @@ body.dark-mode #board {
   border: 2px solid #444;
 }
 
+
 body.dark-mode #instructions {
   background: #1e1e1e;
   color: #ffffff;
   box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+
+.public-lobby-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 5px 0;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+}
+
+body.dark-mode .public-lobby-item {
+  background-color: #2d2d2d;
+}
+
+#publicLobbiesList {
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 10px 0;
 }

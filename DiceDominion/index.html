@@ -62,6 +62,12 @@
       <label for="player2Color">Player 2 Color:</label>
       <input type="color" id="player2Color" value="#ff4c4c" /><br /><br />
       <button onclick="startGame(false)">Create Lobby</button>
+      <label for="isPublicLobby">Public Lobby:</label>
+      <input type="checkbox" id="isPublicLobby" checked /><br /><br />
+      <div id="publicLobbiesSection" style="margin-top: 20px">
+        <h3>Active Public Lobbies</h3>
+        <div id="publicLobbiesList"></div>
+      </div>
       <div id="lobbySection" style="margin-top: 20px">
         <label for="lobbyCodeInput">Enter Lobby Code:</label>
         <input
@@ -129,5 +135,6 @@
     <!-- Application and Game Logic Scripts -->
     <script type="module" src="script.js"></script>
     <script type="module" src="networking.js"></script>
+    <script type="module" src="lobbyManager.js"></script>
   </body>
 </html>
