@@ -1,4 +1,4 @@
-import { writeData, readData, listenToChanges } from "./networking.js";
+import { writeData, readData, listenToChanges, isLobbyActive } from "./networking.js";
 
 
 export function displayPublicLobbies() {
@@ -66,3 +66,39 @@ window.joinPublicLobby = joinPublicLobby;
 document.addEventListener('DOMContentLoaded', () => {
   displayPublicLobbies();
 });
+
+export function updatePublicLobbiesList() {
+  const lobbiesRef = database.ref('lobbies');
+  lobbiesRef.on('value', (snapshot) => {
+    const lobbies = snapshot.val();
+    const lobbiesList = document.getElementById('publicLobbiesList');
+    lobbiesList.innerHTML = '';
+
+    if (lobbies) {
+      Object.entries(lobbies).forEach(([code, data]) => {
+        if (data && data.public && data.players?.player1?.online === true) {
+          const lobbyElement = document.createElement('div');
+          lobbyElement.textContent = `Lobby ${code} - ${data.players.player2 ? 'Full' : 'Available'}`;
+          
+          if (!data.players.player2) {
+            const joinButton = document.createElement('button');
+            joinButton.textContent = 'Join';
+            joinButton.onclick = () => {
+              isLobbyActive(code).then(active => {
+                if (active) {
+                  document.getElementById('lobbyCodeInput').value = code;
+                  startGame(true);
+                } else {
+                  alert("This lobby is no longer available.");
+                  location.reload();
+                }
+              });
+            };
+            lobbyElement.appendChild(joinButton);
+          }
+          lobbiesList.appendChild(lobbyElement);
+        }
+      });
+    }
+  });
+}

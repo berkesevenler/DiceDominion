@@ -3,6 +3,7 @@ import { listenToChanges } from "./networking.js";
 import { readData } from "./networking.js";
 import { auth } from "./networking.js";
 import { handlePublicLobby, updatePublicLobbyPlayers, cleanupPublicLobby } from "./lobbyManager.js";
+import { setupPresenceMonitoring, isLobbyActive } from "./networking.js";
 
 let myPlayerCode = 0; //to determine which player i am
 
@@ -28,6 +29,8 @@ const skipTurnCount = {
   2: 0,
 };
 function displayTurnStatus(lobbyCode) {
+  setupLobbyTerminationListener(lobbyCode);
+  
   const turnStatusElement = document.getElementById("turnStatusDisplay");
 
   listenToChanges(`lobbies/${lobbyCode}/turnStatus`, (turnStatus) => {
@@ -94,21 +97,31 @@ function isPlayerTurn() {
 }
 
 function startGame(join) {
-  if (join === false) {
+  if (join) {
+    lobbyCode = document.getElementById("lobbyCodeInput").value;
+    // Check if lobby is still active before joining
+    isLobbyActive(lobbyCode).then(active => {
+      if (!active) {
+        alert("This lobby is no longer available!");
+        location.reload();
+        return;
+      }
+      initializeGame(join);
+    });
+  } else {
     lobbyCode = generateLobbyCode();
     boardSize = parseInt(document.getElementById("boardSizeInput").value);
     handlePublicLobby(lobbyCode, boardSize);
-  } else {
-    lobbyCode = document.getElementById("lobbyCodeInput").value;
+    initializeGame(join);
   }
-  
+}
+
+function initializeGame(join) {
   const player1Color = document.getElementById("player1Color").value;
   const player2Color = document.getElementById("player2Color").value;
 
   document.documentElement.style.setProperty("--player1-color", player1Color);
   document.documentElement.style.setProperty("--player2-color", player2Color);
-
-  
 
   document.getElementById("menu").style.display = "none";
   document.getElementById("container").style.display = "flex";
@@ -118,39 +131,35 @@ function startGame(join) {
   document.getElementById("container").style.width = "100%";
   document.getElementById("container").style.paddingTop = "50px";
 
-  
-  document.getElementById(
-    "lobbyCodeDisplay"
-  ).innerText = `Lobby Code: ${lobbyCode}`;
+  document.getElementById("lobbyCodeDisplay").innerText = `Lobby Code: ${lobbyCode}`;
 
-//to automatically assign player ids
   readData(`lobbies/${lobbyCode}/players`).then((players) => {
     if (!players || !players.player1) {
-      //assign as player 1
       myPlayerCode = 1;
       writeData(`lobbies/${lobbyCode}/players/player1`, {
         uid: auth.currentUser.uid,
+      }).then(() => {
+        setupPresenceMonitoring(lobbyCode, 1);
       });
       writeData(`lobbies/${lobbyCode}/boardSize`, boardSize);
       board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
       createBoard();
       document.getElementById("status").innerText = "You are Player 1!";
     } else if (!players.player2) {
-      //assign player 2
       myPlayerCode = 2;
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
+      }).then(() => {
+        setupPresenceMonitoring(lobbyCode, 2);
       });
       updatePublicLobbyPlayers(lobbyCode);
-      readData(`lobbies/${lobbyCode}/boardSize`).then((size)=> {
-        boardSize=size;
+      readData(`lobbies/${lobbyCode}/boardSize`).then((size) => {
+        boardSize = size;
         board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
         createBoard();
       });
-      
       document.getElementById("status").innerText = "You are Player 2!";
     } else {
-      // lobby full
       alert("The lobby is already full!");
       location.reload();
       return;
@@ -158,14 +167,8 @@ function startGame(join) {
 
     displayTurnStatus(lobbyCode);
     displayGameOver(lobbyCode);
-    writeData(`lobbies/${lobbyCode}/gameOver`, 0)
-      .then(() => {
-        console.log("Game over state initialized to 0.");
-      })
-      .catch((error) => {
-        console.error("Failed to initialize game over state:", error);
-      });
-
+    writeData(`lobbies/${lobbyCode}/gameOver`, 0);
+    
     if (myPlayerCode === 1) {
       writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
     }
@@ -486,4 +489,13 @@ function canPlayerPlace() {
     }
   }
   return false;
+}
+
+function setupLobbyTerminationListener(lobbyCode) {
+  listenToChanges(`lobbies/${lobbyCode}`, (data) => {
+    if (!data) {
+      alert("The lobby has been terminated because the host left.");
+      location.reload();
+    }
+  });
 }
