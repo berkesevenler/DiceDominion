@@ -33,7 +33,7 @@ export function displayPublicLobbies() {
         <span>Lobby: ${code} (${playerCount}/2 players)</span>
         <button onclick="window.joinPublicLobby('${code}')" 
                 ${isLobbyFull ? 'disabled' : ''}>
-          ${isLobbyFull ? 'Join' : 'Join'}
+          ${isLobbyFull ? 'Full' : 'Join'}
         </button>
       `;
       lobbiesDiv.appendChild(lobbyElement);
