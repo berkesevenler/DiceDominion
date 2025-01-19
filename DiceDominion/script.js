@@ -99,7 +99,6 @@ function isPlayerTurn() {
 function startGame(join) {
   if (join) {
     lobbyCode = document.getElementById("lobbyCodeInput").value;
-    // Check if lobby is still active before joining
     isLobbyActive(lobbyCode).then(active => {
       if (!active) {
         alert("This lobby is no longer available!");
@@ -173,9 +172,78 @@ function initializeGame(join) {
       writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
     }
   });
+
+  document.getElementById("chatContainer").style.display = "block";
+  initializeChat(lobbyCode);
+}
+
+function initializeChat(lobbyCode) {
+  const messageInput = document.getElementById("messageInput");
+  messageInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
+
+  //function to listen for new messages
+  listenToChanges(`lobbies/${lobbyCode}/chat`, (messages) => {
+    if (!messages) return;
+    const chatMessages = document.getElementById("chatMessages");
+    chatMessages.innerHTML = "";
+    //converts messages object to array and then organizes by timestamp
+     const messageArray = Object.entries(messages)
+      .map(([key, msg]) => ({...msg, key}))
+      .sort((a, b) => a.timestamp - b.timestamp);
+    
+    if (messageArray.length > 20) {
+      //if there are more than 20 messages=delete the oldest ones
+      const messagesToDelete = messageArray.slice(0, messageArray.length - 20);
+      //deletes old messages from firebase
+      messagesToDelete.forEach(msg => {
+        firebase.database().ref(`lobbies/${lobbyCode}/chat/${msg.key}`).remove();
+      });
+    
+      //only displays the 20 most recent messages. the others are deleted.
+    messageArray.slice(-20).forEach(msg => {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `chat-message player${msg.player}`;
+        messageDiv.textContent = msg.text;
+        chatMessages.appendChild(messageDiv);
+      });
+    } 
+    
+    else {
+      //if there are 20 or less messages = it displays all of them (like normal)
+      messageArray.forEach(msg => {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `chat-message player${msg.player}`;
+        messageDiv.textContent = msg.text;
+        chatMessages.appendChild(messageDiv);
+      });
+    }
+    //auto scroll function. always scrolls to the bottom of the chat
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+
+function sendMessage() {
+  const messageInput = document.getElementById("messageInput");
+  const message = messageInput.value.trim();
+  
+  if (message) {
+    const chatRef = firebase.database().ref(`lobbies/${lobbyCode}/chat`).push();
+    chatRef.set({
+      player: myPlayerCode,
+      text: message,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+    
+    messageInput.value = "";
+  }
 }
 
 window.startGame = startGame;
+window.sendMessage = sendMessage;
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "r" || e.key === "R") {
