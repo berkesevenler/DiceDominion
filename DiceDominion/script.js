@@ -487,31 +487,38 @@ function canPlayerPlace() {
 
 function exitGame() {
 
-  document.getElementById("container").style.display = "none";
-  document.getElementById("menu").style.display = "block";
-  
-  board = [];
-  currentPlayer = 1;
-  dice1 = null;
-  dice2 = null;
-  isPreviewing = false;
-  canPlaceBlockFlag = false;
-  rotation = 0;
-  hasRolledDice = false;
+  const confirmation = confirm("Are you sure you want to be a loser? Your enemy will win if you leave.");
 
-  const boardDiv = document.getElementById("board");
-  boardDiv.innerHTML = "";
-  document.getElementById("status").innerText = "Waiting for the game to start...";
-  document.getElementById("lobbyCodeDisplay").innerText = "";
-  
-  if (lobbyCode) {
-    writeData(`lobbies/${lobbyCode}/turnStatus`, null);
-    writeData(`lobbies/${lobbyCode}/gameOver`, null);
-    writeData(`lobbies/${lobbyCode}/board`, null);
-    writeData(`lobbies/${lobbyCode}/players`, null);
+  if (confirmation) {
+    document.getElementById("container").style.display = "none";
+    document.getElementById("menu").style.display = "block";
+    
+    board = [];
+    currentPlayer = 1;
+    dice1 = null;
+    dice2 = null;
+    isPreviewing = false;
+    canPlaceBlockFlag = false;
+    rotation = 0;
+    hasRolledDice = false;
+
+    const boardDiv = document.getElementById("board");
+    boardDiv.innerHTML = "";
+    document.getElementById("status").innerText = "Waiting for the game to start...";
+    document.getElementById("lobbyCodeDisplay").innerText = "";
+    
+    if (lobbyCode) {
+      writeData(`lobbies/${lobbyCode}/turnStatus`, null);
+      writeData(`lobbies/${lobbyCode}/gameOver`, null);
+      writeData(`lobbies/${lobbyCode}/board`, null);
+      writeData(`lobbies/${lobbyCode}/players`, null);
+    }
+    
+    console.log("Game exited. Returning to menu.");
+  } else {
+    // If the player cancels, just log the action and do nothing
+    console.log("Exit game canceled by the player.");
   }
-  
-  console.log("Game exited. Returning to menu.");
 }
 
 document.getElementById("exitButton").addEventListener("click", exitGame);
