@@ -45,16 +45,11 @@ function displayTurnStatus(lobbyCode) {
 
 function fetchBoardFromServer(lobbyCode, myPlayerCode) {
   listenToChanges(`lobbies/${lobbyCode}/board`, (serverBoard) => {
-    if (!serverBoard || !Array.isArray(serverBoard)) {
-      console.warn("Server board data is invalid or not initialized yet.");
-      return;
-    }
+    if (!serverBoard) return; //exit if no board data
 
     for (let row = 0; row < boardSize; row++) {
-      if (!board[row]) board[row] = [];
-
       for (let col = 0; col < boardSize; col++) {
-        const serverCell = serverBoard[row]?.[col]; 
+        const serverCell = serverBoard[row]?.[col];
         const localCell = board[row][col];
 
         if (
@@ -69,7 +64,6 @@ function fetchBoardFromServer(lobbyCode, myPlayerCode) {
     }
   });
 }
-
 function updateGridCell(row, col, playerCode) {
   const cellElement = document.querySelector(
     `[data-row="${row}"][data-col="${col}"]`
@@ -98,29 +92,21 @@ function isPlayerTurn() {
   return true;
 }
 
-async function startGame(join) {
+function startGame(join) {
   if (join === false) {
     lobbyCode = generateLobbyCode();
-    boardSize = parseInt(document.getElementById("boardSizeInput").value);
   } else {
     lobbyCode = document.getElementById("lobbyCodeInput").value;
- 
-    readData(`lobbies/${lobbyCode}/board`).then((boardArray) => {
-      boardSize = boardArray.length;
-      console.log(`Board size: ${boardSize}`);
-    }).catch((error) => {
-      console.error("Error fetching board data:", error);
-    });
   }
-  
+  boardSize = parseInt(document.getElementById("boardSizeInput").value);
   const player1Color = document.getElementById("player1Color").value;
   const player2Color = document.getElementById("player2Color").value;
 
   document.documentElement.style.setProperty("--player1-color", player1Color);
   document.documentElement.style.setProperty("--player2-color", player2Color);
 
-  board = Array.from({ length: boardSize }, () => Array(boardSize).fill(0));
-  console.log(board);
+  board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+
   document.getElementById("menu").style.display = "none";
   document.getElementById("container").style.display = "flex";
   document.getElementById("container").style.justifyContent = "center";
@@ -172,7 +158,6 @@ async function startGame(join) {
       writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
     }
   });
-
 }
 
 window.startGame = startGame;
@@ -207,13 +192,6 @@ function createBoard() {
       cell.addEventListener("mouseout", clearPreview);
       cell.addEventListener("click", placeBlock);
       boardDiv.appendChild(cell);
-
-
-      //write it on the server
-      writeData(
-        `lobbies/${lobbyCode}/board/` + row + "/" + col,
-        0
-      );
     }
   }
 }
