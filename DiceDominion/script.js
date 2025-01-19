@@ -99,7 +99,6 @@ function isPlayerTurn() {
 function startGame(join) {
   if (join) {
     lobbyCode = document.getElementById("lobbyCodeInput").value;
-    // Check if lobby is still active before joining
     isLobbyActive(lobbyCode).then(active => {
       if (!active) {
         alert("This lobby is no longer available!");
@@ -173,9 +172,54 @@ function initializeGame(join) {
       writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
     }
   });
+
+  document.getElementById("chatContainer").style.display = "block";
+  initializeChat(lobbyCode);
+}
+
+function initializeChat(lobbyCode) {
+  const messageInput = document.getElementById("messageInput");
+  messageInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
+
+  listenToChanges(`lobbies/${lobbyCode}/chat`, (messages) => {
+    if (!messages) return;
+    
+    const chatMessages = document.getElementById("chatMessages");
+    chatMessages.innerHTML = "";
+    
+    Object.values(messages).forEach(msg => {
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `chat-message player${msg.player}`;
+      messageDiv.textContent = msg.text;
+      chatMessages.appendChild(messageDiv);
+    });
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+
+function sendMessage() {
+  const messageInput = document.getElementById("messageInput");
+  const message = messageInput.value.trim();
+  
+  if (message) {
+    const chatRef = firebase.database().ref(`lobbies/${lobbyCode}/chat`).push();
+    chatRef.set({
+      player: myPlayerCode,
+      text: message,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+    
+    messageInput.value = "";
+  }
 }
 
 window.startGame = startGame;
+window.sendMessage = sendMessage;
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "r" || e.key === "R") {
