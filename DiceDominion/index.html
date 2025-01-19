@@ -33,7 +33,17 @@
       <input type="color" id="player1Color" value="#0073e6" /><br /><br />
       <label for="player2Color">Player 2 Color:</label>
       <input type="color" id="player2Color" value="#ff4c4c" /><br /><br />
-      <button onclick="startGame()">Start Game</button>
+      <button onclick="startGame(false)">Start Game</button>
+      <div id="lobbySection" style="margin-top: 20px">
+        <label for="lobbyCodeInput">Enter Lobby Code:</label>
+        <input
+          type="text"
+          id="lobbyCodeInput"
+          placeholder="Lobby Code"
+          maxlength="10"
+        />
+        <button onclick="startGame(true)">Join Lobby</button>
+      </div>
     </div>
 
     <div id="container">
@@ -58,7 +68,15 @@
         Declare Player <span id="winnerPlayerDisplay"></span> as Winner
       </button>
     </div>
-
+    <!-- Firebase Integration Section -->
+    <div id="firebaseSection">
+      <h2>Firebase Realtime Database</h2>
+      <div id="data"></div>
+      <div
+        id="lobbyCodeDisplay"
+        style="margin-top: 20px; font-size: 18px; font-weight: bold"
+      ></div>
+    </div>
     <!-- Firebase Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>

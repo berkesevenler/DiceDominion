@@ -57,7 +57,15 @@ function updateGridCell(row, col, playerCode) {
     cellElement.classList.add(`player${playerCode}`);
   }
 }
-
+function generateLobbyCode() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let lobbyCode = "";
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    lobbyCode += characters[randomIndex];
+  }
+  return lobbyCode;
+}
 
 function isPlayerTurn() {
   if (currentPlayer !== myPlayerCode) {
@@ -69,8 +77,12 @@ function isPlayerTurn() {
   return true;
 }
 
-function startGame() {
-
+function startGame(join) {
+  if (join === false) {
+    lobbyCode = generateLobbyCode();
+  } else {
+    lobbyCode = document.getElementById("lobbyCodeInput").value;
+  }
   boardSize = parseInt(document.getElementById("boardSizeInput").value);
   const player1Color = document.getElementById("player1Color").value;
   const player2Color = document.getElementById("player2Color").value;
@@ -88,7 +100,10 @@ function startGame() {
   document.getElementById("container").style.width = "100%";
   document.getElementById("container").style.paddingTop = "50px";
 
-
+  // Display the lobby code on the screen
+  document.getElementById(
+    "lobbyCodeDisplay"
+  ).innerText = `Lobby Code: ${lobbyCode}`;
 
 //to automatically assign player ids
   readData(`lobbies/${lobbyCode}/players`).then((players) => {
