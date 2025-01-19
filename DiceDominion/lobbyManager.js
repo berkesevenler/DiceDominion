@@ -12,17 +12,26 @@ export function displayPublicLobbies() {
       return;
     }
 
-    Object.entries(lobbies).forEach(([code, data]) => {
-      if (data.public) { 
-        const playerCount = data.players ? Object.keys(data.players).length : 0;
-        const lobbyElement = document.createElement('div');
-        lobbyElement.className = 'public-lobby-item';
-        lobbyElement.innerHTML = `
-          <span>Lobby: ${code} (${playerCount}/2 players)</span>
-          <button onclick="window.joinPublicLobby('${code}')">Join</button>
-        `;
-        lobbiesDiv.appendChild(lobbyElement);
-      }
+    //converts to array and sorts by player count
+    const lobbiesArray = Object.entries(lobbies)
+      .filter(([_, data]) => data.public)
+      .map(([code, data]) => ({
+        code,
+        playerCount: data.players ? Object.keys(data.players).length : 0
+      }))
+      //empties lobbies first
+      .sort((a, b) => a.playerCount - b.playerCount);
+
+      
+    //displays sorted lobbies
+    lobbiesArray.forEach(({code, playerCount}) => {
+      const lobbyElement = document.createElement('div');
+      lobbyElement.className = 'public-lobby-item';
+      lobbyElement.innerHTML = `
+        <span>Lobby: ${code} (${playerCount}/2 players)</span>
+        <button onclick="window.joinPublicLobby('${code}')">Join</button>
+      `;
+      lobbiesDiv.appendChild(lobbyElement);
     });
   });
 }
