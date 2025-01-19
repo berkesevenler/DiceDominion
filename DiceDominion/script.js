@@ -2,6 +2,7 @@ import { writeData } from "./networking.js";
 import { listenToChanges } from "./networking.js";
 import { readData } from "./networking.js";
 import { auth } from "./networking.js";
+import { handlePublicLobby, updatePublicLobbyPlayers, cleanupPublicLobby } from "./lobbyManager.js";
 
 let myPlayerCode = 0; //to determine which player i am
 
@@ -96,7 +97,7 @@ function startGame(join) {
   if (join === false) {
     lobbyCode = generateLobbyCode();
     boardSize = parseInt(document.getElementById("boardSizeInput").value);
-    
+    handlePublicLobby(lobbyCode, boardSize);
   } else {
     lobbyCode = document.getElementById("lobbyCodeInput").value;
   }
@@ -117,7 +118,7 @@ function startGame(join) {
   document.getElementById("container").style.width = "100%";
   document.getElementById("container").style.paddingTop = "50px";
 
-  // Display the lobby code on the screen
+  
   document.getElementById(
     "lobbyCodeDisplay"
   ).innerText = `Lobby Code: ${lobbyCode}`;
@@ -140,6 +141,7 @@ function startGame(join) {
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
       });
+      updatePublicLobbyPlayers(lobbyCode);
       readData(`lobbies/${lobbyCode}/boardSize`).then((size)=> {
         boardSize=size;
         board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
@@ -282,6 +284,7 @@ function displayGameOver(lobbyCode) {
 }
 
 function handleGameOver(lobbyCode, winningPlayer) {
+  cleanupPublicLobby(lobbyCode);
   writeData(`lobbies/${lobbyCode}/gameOver`, winningPlayer)
     .then(() => {
       console.log(`Game over! Player ${winningPlayer} has won.`);

@@ -1,8 +1,6 @@
-// initialise
-const database = firebase.database();
+export const database = firebase.database();
 export const auth = firebase.auth();
 
-//authenticates user using google magic
 function authenticateUser() {
   auth.onAuthStateChanged((user) => {
     if (user) {
@@ -21,7 +19,6 @@ function authenticateUser() {
   });
 }
 
-//helper function to initialise the lobby
 function initializeDatabaseFeatures() {
   initializeGameState(lobbyCode);
 
@@ -46,7 +43,7 @@ export function writeData(path, data) {
     })
     .catch((error) => {
       console.error(`Failed to write data to ${path}:`, error);
-      throw error; // Rethrow the error for further handling
+      throw error; 
     });
 }
 
@@ -149,7 +146,7 @@ function startGame(lobbyCode) {
   const path = `lobbies/${lobbyCode}/turnStatus`;
   database
     .ref(path)
-    .set(1) // Player 1 starts the game
+    .set(1)
     .then(() => {
       console.log("Game started");
     })
