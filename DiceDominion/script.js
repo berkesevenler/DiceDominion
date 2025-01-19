@@ -26,7 +26,22 @@ const skipTurnCount = {
   1: 0,
   2: 0,
 };
+function displayTurnStatus(lobbyCode) {
+  const turnStatusElement = document.getElementById("turnStatusDisplay");
 
+  listenToChanges(`lobbies/${lobbyCode}/turnStatus`, (turnStatus) => {
+    let turnText = "Waiting for the game to start...";
+    if (turnStatus === 1) {
+      turnText = "It's Player 1's turn!";
+    } else if (turnStatus === 2) {
+      turnText = "It's Player 2's turn!";
+    }
+    currentPlayer = turnStatus;
+    turnStatusElement.innerText = turnText;
+
+    fetchBoardFromServer(lobbyCode, myPlayerCode);
+  });
+}
 
 function fetchBoardFromServer(lobbyCode, myPlayerCode) {
   listenToChanges(`lobbies/${lobbyCode}/board`, (serverBoard) => {
@@ -129,6 +144,7 @@ function startGame(join) {
     }
 
     createBoard();
+    displayTurnStatus(lobbyCode);
     displayGameOver(lobbyCode);
     writeData(`lobbies/${lobbyCode}/gameOver`, 0)
       .then(() => {
