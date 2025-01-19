@@ -96,6 +96,26 @@ button:hover {
   color: #374151;
 }
 
+.exit-button {
+  position: absolute;
+  top: 40px;
+  left: 290px;
+  padding: 10px 20px;
+  background-color: #ffa41c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.exit-button:hover {
+  background-color: #ff6600;
+}
+
+
+
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -484,3 +484,34 @@ function canPlayerPlace() {
   }
   return false;
 }
+
+function exitGame() {
+
+  document.getElementById("container").style.display = "none";
+  document.getElementById("menu").style.display = "block";
+  
+  board = [];
+  currentPlayer = 1;
+  dice1 = null;
+  dice2 = null;
+  isPreviewing = false;
+  canPlaceBlockFlag = false;
+  rotation = 0;
+  hasRolledDice = false;
+
+  const boardDiv = document.getElementById("board");
+  boardDiv.innerHTML = "";
+  document.getElementById("status").innerText = "Waiting for the game to start...";
+  document.getElementById("lobbyCodeDisplay").innerText = "";
+  
+  if (lobbyCode) {
+    writeData(`lobbies/${lobbyCode}/turnStatus`, null);
+    writeData(`lobbies/${lobbyCode}/gameOver`, null);
+    writeData(`lobbies/${lobbyCode}/board`, null);
+    writeData(`lobbies/${lobbyCode}/players`, null);
+  }
+  
+  console.log("Game exited. Returning to menu.");
+}
+
+document.getElementById("exitButton").addEventListener("click", exitGame);
