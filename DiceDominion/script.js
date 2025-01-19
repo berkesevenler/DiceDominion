@@ -61,7 +61,7 @@ function fetchBoardFromServer(lobbyCode, myPlayerCode) {
           serverCell !== myPlayerCode &&
           serverCell !== localCell
         ) {
-          board[row][col] = serverCell; 
+          board[row][col] = serverCell;
           updateGridCell(row, col, serverCell);
         }
       }
@@ -116,11 +116,6 @@ function startGame(join) {
 }
 
 function initializeGame(join) {
-  const player1Color = document.getElementById("player1Color").value;
-  const player2Color = document.getElementById("player2Color").value;
-
-  document.documentElement.style.setProperty("--player1-color", player1Color);
-  document.documentElement.style.setProperty("--player2-color", player2Color);
 
   document.getElementById("menu").style.display = "none";
   document.getElementById("container").style.display = "flex";
@@ -132,31 +127,54 @@ function initializeGame(join) {
 
   document.getElementById("lobbyCodeDisplay").innerText = `Lobby Code: ${lobbyCode}`;
 
+  //to automatically assign player ids
   readData(`lobbies/${lobbyCode}/players`).then((players) => {
     if (!players || !players.player1) {
       myPlayerCode = 1;
+      const player1ChosenColor = document.getElementById("playerColor").value;
       writeData(`lobbies/${lobbyCode}/players/player1`, {
         uid: auth.currentUser.uid,
+        color: player1ChosenColor,
       }).then(() => {
         setupPresenceMonitoring(lobbyCode, 1);
       });
+      document.documentElement.style.setProperty(
+        "--player1-color",
+        player1ChosenColor
+      );
+      listenToChanges(`lobbies/${lobbyCode}/players/player2/color`, (data) => {
+        document.documentElement.style.setProperty("--player2-color", data);
+      });
       writeData(`lobbies/${lobbyCode}/boardSize`, boardSize);
-      board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+      board = Array.from({ length: boardSize }, () =>
+        Array(boardSize).fill(null)
+      );
       createBoard();
       document.getElementById("status").innerText = "You are Player 1!";
     } else if (!players.player2) {
       myPlayerCode = 2;
+      const player2ChosenColor = document.getElementById("playerColor").value;
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
+        color: player2ChosenColor,
       }).then(() => {
         setupPresenceMonitoring(lobbyCode, 2);
       });
-      updatePublicLobbyPlayers(lobbyCode);
+      document.documentElement.style.setProperty(
+        "--player2-color",
+        player2ChosenColor
+      );
+      readData(`lobbies/${lobbyCode}/players/player1/color`).then((data) => {
+        document.documentElement.style.setProperty("--player1-color", data);
+      });
       readData(`lobbies/${lobbyCode}/boardSize`).then((size) => {
         boardSize = size;
-        board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+        board = Array.from({ length: boardSize }, () =>
+          Array(boardSize).fill(null)
+        );
         createBoard();
       });
+
       document.getElementById("status").innerText = "You are Player 2!";
     } else {
       alert("The lobby is already full!");
