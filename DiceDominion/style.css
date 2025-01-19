@@ -270,3 +270,8 @@ body.dark-mode #messageInput {
   color: white;
   align-self: flex-end;
 }
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
