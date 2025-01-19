@@ -121,10 +121,22 @@ function startGame(join) {
         uid: auth.currentUser.uid,
       });
       document.getElementById("status").innerText = "You are Player 2!";
-    } 
+    } else {
+      // lobby full
+      alert("The lobby is already full!");
+      location.reload();
+      return;
+    }
 
     createBoard();
     displayGameOver(lobbyCode);
+    writeData(`lobbies/${lobbyCode}/gameOver`, 0)
+      .then(() => {
+        console.log("Game over state initialized to 0.");
+      })
+      .catch((error) => {
+        console.error("Failed to initialize game over state:", error);
+      });
 
     if (myPlayerCode === 1) {
       writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
