@@ -1,8 +1,6 @@
-// initialise
-const database = firebase.database();
+export const database = firebase.database();
 export const auth = firebase.auth();
 
-//authenticates user using google magic
 function authenticateUser() {
   auth.onAuthStateChanged((user) => {
     if (user) {
@@ -21,7 +19,6 @@ function authenticateUser() {
   });
 }
 
-//helper function to initialise the lobby
 function initializeDatabaseFeatures() {
   initializeGameState(lobbyCode);
 
@@ -46,7 +43,7 @@ export function writeData(path, data) {
     })
     .catch((error) => {
       console.error(`Failed to write data to ${path}:`, error);
-      throw error; // Rethrow the error for further handling
+      throw error; 
     });
 }
 
@@ -149,7 +146,7 @@ function startGame(lobbyCode) {
   const path = `lobbies/${lobbyCode}/turnStatus`;
   database
     .ref(path)
-    .set(1) // Player 1 starts the game
+    .set(1)
     .then(() => {
       console.log("Game started");
     })
@@ -173,5 +170,42 @@ function joinGame(lobbyCode, player) {
     })
     .catch((error) => {
       console.error("Failed to join game:", error);
+    });
+}
+
+
+export function setupPresenceMonitoring(lobbyCode, playerNumber) {
+  const userStatusPath = `lobbies/${lobbyCode}/players/player${playerNumber}/online`;
+  const userStatusDatabaseRef = database.ref(userStatusPath);
+  const presenceRef = database.ref('.info/connected');
+  
+  presenceRef.on('value', (snapshot) => {
+    if (snapshot.val() === false) return;
+
+    userStatusDatabaseRef.onDisconnect().remove();
+    userStatusDatabaseRef.set(true);
+
+    if (playerNumber === 1) {
+      database.ref(`lobbies/${lobbyCode}`).onDisconnect().remove();
+    }
+  });
+
+  if (playerNumber === 2) {
+    const player1StatusRef = database.ref(`lobbies/${lobbyCode}/players/player1/online`);
+    player1StatusRef.on('value', (snapshot) => {
+      if (!snapshot.exists() || snapshot.val() === null) {
+        alert("The host has left the game. Returning to main menu...");
+        location.reload();
+      }
+    });
+  }
+}
+
+export function isLobbyActive(lobbyCode) {
+  return database.ref(`lobbies/${lobbyCode}`)
+    .once('value')
+    .then(snapshot => {
+      const lobby = snapshot.val();
+      return lobby && lobby.players && lobby.players.player1 && lobby.players.player1.online === true;
     });
 }
