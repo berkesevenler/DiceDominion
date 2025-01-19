@@ -95,17 +95,19 @@ function isPlayerTurn() {
 function startGame(join) {
   if (join === false) {
     lobbyCode = generateLobbyCode();
+    boardSize = parseInt(document.getElementById("boardSizeInput").value);
+    
   } else {
     lobbyCode = document.getElementById("lobbyCodeInput").value;
   }
-  boardSize = parseInt(document.getElementById("boardSizeInput").value);
+  
   const player1Color = document.getElementById("player1Color").value;
   const player2Color = document.getElementById("player2Color").value;
 
   document.documentElement.style.setProperty("--player1-color", player1Color);
   document.documentElement.style.setProperty("--player2-color", player2Color);
 
-  board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
+  
 
   document.getElementById("menu").style.display = "none";
   document.getElementById("container").style.display = "flex";
@@ -128,6 +130,7 @@ function startGame(join) {
       writeData(`lobbies/${lobbyCode}/players/player1`, {
         uid: auth.currentUser.uid,
       });
+      writeData(`lobbies/${lobbyCode}/boardSize`, boardSize);
       document.getElementById("status").innerText = "You are Player 1!";
     } else if (!players.player2) {
       //assign player 2
@@ -135,6 +138,7 @@ function startGame(join) {
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
       });
+      boardSize=readData(`lobbies/${lobbyCode}/boardSize`);
       document.getElementById("status").innerText = "You are Player 2!";
     } else {
       // lobby full
@@ -142,7 +146,7 @@ function startGame(join) {
       location.reload();
       return;
     }
-
+    board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
     createBoard();
     displayTurnStatus(lobbyCode);
     displayGameOver(lobbyCode);
