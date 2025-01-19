@@ -1,3 +1,12 @@
+import { writeData } from "./networking.js";
+import { listenToChanges } from "./networking.js";
+import { readData } from "./networking.js";
+import { auth } from "./networking.js";
+
+let myPlayerCode = 0; //to determine which player i am
+
+let lobbyCode = "TESTLOBBY";
+
 function toggleTheme() {
   const body = document.body;
   body.classList.toggle("dark-mode");
@@ -17,10 +26,79 @@ const skipTurnCount = {
   1: 0,
   2: 0,
 };
+function displayTurnStatus(lobbyCode) {
+  const turnStatusElement = document.getElementById("turnStatusDisplay");
 
-function startGame() {
+  listenToChanges(`lobbies/${lobbyCode}/turnStatus`, (turnStatus) => {
+    let turnText = "Waiting for the game to start...";
+    if (turnStatus === 1) {
+      turnText = "It's Player 1's turn!";
+    } else if (turnStatus === 2) {
+      turnText = "It's Player 2's turn!";
+    }
+    currentPlayer = turnStatus;
+    turnStatusElement.innerText = turnText;
+
+    fetchBoardFromServer(lobbyCode, myPlayerCode);
+  });
+}
+
+function fetchBoardFromServer(lobbyCode, myPlayerCode) {
+  listenToChanges(`lobbies/${lobbyCode}/board`, (serverBoard) => {
+    if (!serverBoard) return; //exit if no board data
+
+    for (let row = 0; row < boardSize; row++) {
+      for (let col = 0; col < boardSize; col++) {
+        const serverCell = serverBoard[row]?.[col];
+        const localCell = board[row][col];
+
+        if (
+          serverCell &&
+          serverCell !== myPlayerCode &&
+          serverCell !== localCell
+        ) {
+          board[row][col] = serverCell; 
+          updateGridCell(row, col, serverCell);
+        }
+      }
+    }
+  });
+}
+function updateGridCell(row, col, playerCode) {
+  const cellElement = document.querySelector(
+    `[data-row="${row}"][data-col="${col}"]`
+  );
+  if (cellElement) {
+    cellElement.classList.add(`player${playerCode}`);
+  }
+}
+function generateLobbyCode() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let lobbyCode = "";
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    lobbyCode += characters[randomIndex];
+  }
+  return lobbyCode;
+}
+
+function isPlayerTurn() {
+  if (currentPlayer !== myPlayerCode) {
+    document.getElementById(
+      "status"
+    ).innerText = `It's not your turn! Player ${currentPlayer} is playing.`;
+    return false;
+  }
+  return true;
+}
+
+function startGame(join) {
+  if (join === false) {
+    lobbyCode = generateLobbyCode();
+  } else {
+    lobbyCode = document.getElementById("lobbyCodeInput").value;
+  }
   boardSize = parseInt(document.getElementById("boardSizeInput").value);
-
   const player1Color = document.getElementById("player1Color").value;
   const player2Color = document.getElementById("player2Color").value;
 
@@ -31,14 +109,58 @@ function startGame() {
 
   document.getElementById("menu").style.display = "none";
   document.getElementById("container").style.display = "flex";
-  document.getElementById("container").style.flexDirection = "column";
+  document.getElementById("container").style.justifyContent = "center";
   document.getElementById("container").style.alignItems = "flex-start";
+  document.getElementById("container").style.flexDirection = "column";
   document.getElementById("container").style.width = "100%";
   document.getElementById("container").style.paddingTop = "50px";
-  document.getElementById("container").style.justifyContent = "center";
 
-  createBoard();
+  // Display the lobby code on the screen
+  document.getElementById(
+    "lobbyCodeDisplay"
+  ).innerText = `Lobby Code: ${lobbyCode}`;
+
+//to automatically assign player ids
+  readData(`lobbies/${lobbyCode}/players`).then((players) => {
+    if (!players || !players.player1) {
+      //assign as player 1
+      myPlayerCode = 1;
+      writeData(`lobbies/${lobbyCode}/players/player1`, {
+        uid: auth.currentUser.uid,
+      });
+      document.getElementById("status").innerText = "You are Player 1!";
+    } else if (!players.player2) {
+      //assign player 2
+      myPlayerCode = 2;
+      writeData(`lobbies/${lobbyCode}/players/player2`, {
+        uid: auth.currentUser.uid,
+      });
+      document.getElementById("status").innerText = "You are Player 2!";
+    } else {
+      // lobby full
+      alert("The lobby is already full!");
+      location.reload();
+      return;
+    }
+
+    createBoard();
+    displayTurnStatus(lobbyCode);
+    displayGameOver(lobbyCode);
+    writeData(`lobbies/${lobbyCode}/gameOver`, 0)
+      .then(() => {
+        console.log("Game over state initialized to 0.");
+      })
+      .catch((error) => {
+        console.error("Failed to initialize game over state:", error);
+      });
+
+    if (myPlayerCode === 1) {
+      writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
+    }
+  });
 }
+
+window.startGame = startGame;
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "r" || e.key === "R") {
@@ -53,7 +175,6 @@ document.addEventListener("keydown", (e) => {
 function createBoard() {
   const boardDiv = document.getElementById("board");
   boardDiv.innerHTML = "";
-
   boardDiv.style.gridTemplateColumns = `repeat(${boardSize}, 40px)`;
   boardDiv.style.gridTemplateRows = `repeat(${boardSize}, 40px)`;
   boardDiv.style.width = `${boardSize * 40}px`;
@@ -75,7 +196,8 @@ function createBoard() {
   }
 }
 
-function rollDice() {
+export function rollDice() {
+  if (!isPlayerTurn()) return; //check if player turn
   if (hasRolledDice) {
     document.getElementById(
       "status"
@@ -88,13 +210,12 @@ function rollDice() {
   document.getElementById(
     "status"
   ).innerText = `Player ${currentPlayer} rolled ${dice1}x${dice2}`;
-
   document.getElementById("controls").style.display = "block";
   document.getElementById("currentPlayerDisplay").innerText = currentPlayer;
   document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
-  hasRolledDice = true;
   canPlaceBlockFlag = true;
   rotation = 0;
+  hasRolledDice = true;
 
   if (!canPlayerPlace()) {
     handleNoValidMoves();
@@ -103,7 +224,7 @@ function rollDice() {
     hideDeclareWinnerButton();
   }
 }
-
+window.rollDice = rollDice;
 function previewBlock(event) {
   if (!dice1 || !dice2 || !canPlaceBlockFlag) return;
   clearPreview();
@@ -121,7 +242,7 @@ function previewBlock(event) {
       for (let col = startX; col < startX + width; col++) {
         if (board[row][col] === null) {
           document
-            .querySelector(`[data-row='${row}'][data-col='${col}']`)
+            .querySelector(`[data-row="${row}"][data-col="${col}"]`)
             .classList.add(previewClass);
         }
       }
@@ -136,6 +257,28 @@ function clearPreview() {
     .querySelectorAll(".preview-blue, .preview-red")
     .forEach((cell) => cell.classList.remove("preview-blue", "preview-red"));
   isPreviewing = false;
+}
+
+function displayGameOver(lobbyCode) {
+  listenToChanges(`lobbies/${lobbyCode}/gameOver`, (gameOver) => {
+    if (gameOver) {
+      const winner = gameOver === 1 ? "Player 1" : "Player 2";
+      document.getElementById(
+        "status"
+      ).innerText = `Game Over! ${winner} has won!`;
+      alert(`Game Over! ${winner} has won! Please start a new game.`);
+    }
+  });
+}
+
+function handleGameOver(lobbyCode, winningPlayer) {
+  writeData(`lobbies/${lobbyCode}/gameOver`, winningPlayer)
+    .then(() => {
+      console.log(`Game over! Player ${winningPlayer} has won.`);
+    })
+    .catch((error) => {
+      console.error("Failed to set game over state:", error);
+    });
 }
 
 function placeBlock(event) {
@@ -153,6 +296,10 @@ function placeBlock(event) {
     for (let row = startY; row < startY + height; row++) {
       for (let col = startX; col < startX + width; col++) {
         board[row][col] = currentPlayer;
+        writeData(
+          `lobbies/${lobbyCode}/board/` + row + "/" + col,
+          currentPlayer
+        );
         document
           .querySelector(`[data-row="${row}"][data-col="${col}"]`)
           .classList.add(`player${currentPlayer}`);
@@ -236,10 +383,11 @@ function checkWinCondition() {
 
 function declareWinner(winner) {
   alert(`Player ${winner} wins!`);
+  handleGameOver(lobbyCode, winner);
   location.reload();
 }
 
-function skipTurn() {
+export function skipTurn() {
   if (skipTurnCount[currentPlayer] < skipTurnLimit) {
     skipTurnCount[currentPlayer]++;
     document.getElementById(
@@ -252,7 +400,7 @@ function skipTurn() {
     handleNoValidMoves();
   }
 }
-
+window.skipTurn = skipTurn;
 function handleNoValidMoves() {
   if (skipTurnCount[currentPlayer] >= skipTurnLimit && !canPlayerPlace()) {
     const otherPlayer = currentPlayer === 1 ? 2 : 1;
@@ -272,13 +420,13 @@ function handleNoValidMoves() {
 
 function endTurn() {
   currentPlayer = currentPlayer === 1 ? 2 : 1;
+  writeData(`lobbies/${lobbyCode}/turnStatus`, currentPlayer);
   canPlaceBlockFlag = false;
   hasRolledDice = false;
   document.getElementById("controls").style.display = "none";
   document.getElementById(
     "status"
   ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
-
   hideSkipTurnButton();
   hideDeclareWinnerButton();
   clearPreview();
@@ -289,6 +437,7 @@ function showSkipTurnButton() {
     document.getElementById("skipTurnButton").style.display = "block";
   }
 }
+
 function hideSkipTurnButton() {
   document.getElementById("skipTurnButton").style.display = "none";
 }
@@ -303,10 +452,11 @@ function hideDeclareWinnerButton() {
   document.getElementById("declareWinnerButton").style.display = "none";
 }
 
-function declareOtherPlayerWinner() {
+export function declareOtherPlayerWinner() {
   const otherPlayer = currentPlayer === 1 ? 2 : 1;
   declareWinner(otherPlayer);
 }
+window.declareOtherPlayerWinner = declareOtherPlayerWinner;
 
 function canPlayerPlace() {
   for (let row = 0; row < boardSize; row++) {
