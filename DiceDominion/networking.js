@@ -173,26 +173,35 @@ function joinGame(lobbyCode, player) {
     });
 }
 
-
+//this function manages the presence of player 1 & 2 in a lobby
+//this fucntion is needed for tracking how many players are in a lobby in order to disconnect lobbies from  game-menu/database
 export function setupPresenceMonitoring(lobbyCode, playerNumber) {
   const userStatusPath = `lobbies/${lobbyCode}/players/player${playerNumber}/online`;
   const userStatusDatabaseRef = database.ref(userStatusPath);
   const presenceRef = database.ref('.info/connected');
   
+  //listen to chnages in connection
   presenceRef.on('value', (snapshot) => {
+    //if player is not connected, exit the function
     if (snapshot.val() === false) return;
 
+    //callback to remove the user's online status when they disconnect 
     userStatusDatabaseRef.onDisconnect().remove();
     userStatusDatabaseRef.set(true);
 
+    //if player 1 is connected and they leave, remove lobby from database
     if (playerNumber === 1) {
       database.ref(`lobbies/${lobbyCode}`).onDisconnect().remove();
     }
   });
 
+  //if player 2 is connected
   if (playerNumber === 2) {
     const player1StatusRef = database.ref(`lobbies/${lobbyCode}/players/player1/online`);
+    
+    //listen for changes from player1 (host)
     player1StatusRef.on('value', (snapshot) => {
+      //if the status for player1 doesnt exist it means they left or disconnected
       if (!snapshot.exists() || snapshot.val() === null) {
         alert("The host has left the game. Returning to main menu...");
         location.reload();
@@ -201,11 +210,15 @@ export function setupPresenceMonitoring(lobbyCode, playerNumber) {
   }
 }
 
+
+
+//this function checks wether a specific lobby is active according to player1 (host)
 export function isLobbyActive(lobbyCode) {
   return database.ref(`lobbies/${lobbyCode}`)
     .once('value')
     .then(snapshot => {
       const lobby = snapshot.val();
+      //check if lobby exist, has both player 1 & 2, and if player1 (host) is in the game
       return lobby && lobby.players && lobby.players.player1 && lobby.players.player1.online === true;
     });
 }

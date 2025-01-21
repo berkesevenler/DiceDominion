@@ -28,6 +28,9 @@ const skipTurnCount = {
   1: 0,
   2: 0,
 };
+
+
+//function for stating whos trun it is. (on the top left side of the game)
 function displayTurnStatus(lobbyCode) {
   setupLobbyTerminationListener(lobbyCode);
   
@@ -47,6 +50,7 @@ function displayTurnStatus(lobbyCode) {
   });
 }
 
+//function to call the game-board data from firebase
 function fetchBoardFromServer(lobbyCode, myPlayerCode) {
   listenToChanges(`lobbies/${lobbyCode}/board`, (serverBoard) => {
     if (!serverBoard) return; //exit if no board data
@@ -68,6 +72,8 @@ function fetchBoardFromServer(lobbyCode, myPlayerCode) {
     }
   });
 }
+
+//update game-grid when a player claims it
 function updateGridCell(row, col, playerCode) {
   const cellElement = document.querySelector(
     `[data-row="${row}"][data-col="${col}"]`
@@ -76,6 +82,10 @@ function updateGridCell(row, col, playerCode) {
     cellElement.classList.add(`player${playerCode}`);
   }
 }
+
+
+
+//basic function to generate (private) lobby code
 function generateLobbyCode() {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let lobbyCode = "";
@@ -86,6 +96,9 @@ function generateLobbyCode() {
   return lobbyCode;
 }
 
+
+
+//determines whos turn it is, when a player tries to place a block even though its not their turn
 function isPlayerTurn() {
   if (currentPlayer !== myPlayerCode) {
     document.getElementById(
@@ -96,18 +109,31 @@ function isPlayerTurn() {
   return true;
 }
 
+
+
+
+//really important function
+//this function handles creating and joining a game/lobby
 function startGame(join) {
   if (join) {
+    //joining an existing game
+    //gets lobby code
     lobbyCode = document.getElementById("lobbyCodeInput").value;
+    //check if lobby is active
     isLobbyActive(lobbyCode).then(active => {
       if (!active) {
+        //if not active, display error message
         alert("This lobby is no longer available!");
         location.reload();
         return;
       }
+      //if active starts the game
       initializeGame(join);
     });
-  } else {
+  } 
+  
+  else {
+    //else creats a new game & new lobby code
     lobbyCode = generateLobbyCode();
     boardSize = parseInt(document.getElementById("boardSizeInput").value);
     handlePublicLobby(lobbyCode, boardSize);
@@ -115,8 +141,15 @@ function startGame(join) {
   }
 }
 
+
+
+
+
+//Important function
+//sets up everythign needed for the game to start
 function initializeGame(join) {
 
+  //UI setup
   document.getElementById("menu").style.display = "none";
   document.getElementById("container").style.display = "flex";
   document.getElementById("container").style.justifyContent = "center";
@@ -129,15 +162,18 @@ function initializeGame(join) {
 
   //to automatically assign player ids
   readData(`lobbies/${lobbyCode}/players`).then((players) => {
+    //player 1 setup
     if (!players || !players.player1) {
       myPlayerCode = 1;
       const player1ChosenColor = document.getElementById("playerColor").value;
+      //save player 1s data to firebase
       writeData(`lobbies/${lobbyCode}/players/player1`, {
         uid: auth.currentUser.uid,
         color: player1ChosenColor,
       }).then(() => {
         setupPresenceMonitoring(lobbyCode, 1);
       });
+      //set player 1s color and listen to player2s color
       document.documentElement.style.setProperty(
         "--player1-color",
         player1ChosenColor
@@ -145,15 +181,20 @@ function initializeGame(join) {
       listenToChanges(`lobbies/${lobbyCode}/players/player2/color`, (data) => {
         document.documentElement.style.setProperty("--player2-color", data);
       });
+      //initialize board
       writeData(`lobbies/${lobbyCode}/boardSize`, boardSize);
       board = Array.from({ length: boardSize }, () =>
         Array(boardSize).fill(null)
       );
       createBoard();
       document.getElementById("status").innerText = "You are Player 1!";
-    } else if (!players.player2) {
+    } 
+
+    //player 2 setup
+    else if (!players.player2) {
       myPlayerCode = 2;
       const player2ChosenColor = document.getElementById("playerColor").value;
+      
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
         color: player2ChosenColor,
@@ -164,9 +205,11 @@ function initializeGame(join) {
         "--player2-color",
         player2ChosenColor
       );
+      //read data of player 1 from firebase
       readData(`lobbies/${lobbyCode}/players/player1/color`).then((data) => {
         document.documentElement.style.setProperty("--player1-color", data);
       });
+      //read data of game-board from firebase
       readData(`lobbies/${lobbyCode}/boardSize`).then((size) => {
         boardSize = size;
         board = Array.from({ length: boardSize }, () =>
@@ -176,7 +219,10 @@ function initializeGame(join) {
       });
 
       document.getElementById("status").innerText = "You are Player 2!";
-    } else {
+    } 
+    
+    //if lobby is full
+    else {
       alert("The lobby is already full!");
       location.reload();
       return;
@@ -186,15 +232,23 @@ function initializeGame(join) {
     displayGameOver(lobbyCode);
     writeData(`lobbies/${lobbyCode}/gameOver`, 0);
     
+    //sets initial turn to player 1 to start the game.
     if (myPlayerCode === 1) {
       writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
     }
   });
 
+  //chat setup
   document.getElementById("chatContainer").style.display = "block";
   initializeChat(lobbyCode);
 }
 
+
+
+
+
+
+//chat system between players
 function initializeChat(lobbyCode) {
   const messageInput = document.getElementById("messageInput");
   messageInput.addEventListener("keypress", (e) => {
@@ -205,7 +259,9 @@ function initializeChat(lobbyCode) {
 
   //function to listen for new messages
   listenToChanges(`lobbies/${lobbyCode}/chat`, (messages) => {
-    if (!messages) return;
+    
+    if (!messages) return; //if no messages, exit
+    //get chat box and clear it
     const chatMessages = document.getElementById("chatMessages");
     chatMessages.innerHTML = "";
     //converts messages object to array and then organizes by timestamp
@@ -244,25 +300,43 @@ function initializeChat(lobbyCode) {
   });
 }
 
+
+
+
+
+//function to handle sending messages back and forth
 function sendMessage() {
   const messageInput = document.getElementById("messageInput");
+  
+  //.trim is for removing not needed white spaces from text
   const message = messageInput.value.trim();
   
   if (message) {
+    //creates a reference to the chat in firebase
     const chatRef = firebase.database().ref(`lobbies/${lobbyCode}/chat`).push();
+    
+    //sets the message data in firebase
     chatRef.set({
       player: myPlayerCode,
       text: message,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     });
     
+    //after sending a message, clear the input field
     messageInput.value = "";
   }
 }
 
+
+
+//attach functions to the global window object
 window.startGame = startGame;
 window.sendMessage = sendMessage;
 
+
+
+
+//function to rotate block 90degrees when pressed "r" key
 document.addEventListener("keydown", (e) => {
   if (e.key === "r" || e.key === "R") {
     rotation = (rotation + 90) % 360;
@@ -273,6 +347,10 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+
+
+
+//function to generate game-board
 function createBoard() {
   const boardDiv = document.getElementById("board");
   boardDiv.innerHTML = "";
@@ -297,6 +375,10 @@ function createBoard() {
   }
 }
 
+
+
+
+//this function handles dice rolling functionallity between players
 export function rollDice() {
   if (!isPlayerTurn()) return; //check if player turn
   if (hasRolledDice) {
@@ -325,7 +407,13 @@ export function rollDice() {
     hideDeclareWinnerButton();
   }
 }
+
+
 window.rollDice = rollDice;
+
+
+
+//function to see a preview of the blocks you will place but havent placed yet, when hovered around the board
 function previewBlock(event) {
   if (!dice1 || !dice2 || !canPlaceBlockFlag) return;
   clearPreview();
@@ -352,6 +440,8 @@ function previewBlock(event) {
   }
 }
 
+
+// if previewing is not active anymore, exits function
 function clearPreview() {
   if (!isPreviewing) return;
   document
@@ -360,6 +450,9 @@ function clearPreview() {
   isPreviewing = false;
 }
 
+
+
+//when a player has won the game, a message pops up stating the other player has won
 function displayGameOver(lobbyCode) {
   listenToChanges(`lobbies/${lobbyCode}/gameOver`, (gameOver) => {
     if (gameOver) {
@@ -372,6 +465,9 @@ function displayGameOver(lobbyCode) {
   });
 }
 
+
+
+//writes data to firebase when a player has won.
 function handleGameOver(lobbyCode, winningPlayer) {
   cleanupPublicLobby(lobbyCode);
   writeData(`lobbies/${lobbyCode}/gameOver`, winningPlayer)
@@ -383,6 +479,10 @@ function handleGameOver(lobbyCode, winningPlayer) {
     });
 }
 
+
+
+
+//function to handle placing blocks in the game
 function placeBlock(event) {
   if (!canPlaceBlockFlag) return;
 
@@ -420,6 +520,8 @@ function placeBlock(event) {
   }
 }
 
+
+//function to adjust the dimension of the block according to the angle it turns
 function applyRotation(width, height) {
   if (rotation === 90 || rotation === 270) {
     return [height, width];
@@ -427,10 +529,17 @@ function applyRotation(width, height) {
   return [width, height];
 }
 
+
+
+
+//checks if the block placed is within bounds
 function isWithinBounds(x, y, width, height) {
   return x >= 0 && y >= 0 && x + width <= boardSize && y + height <= boardSize;
 }
 
+
+
+//checks if the blocks placed are connected
 function isConnected(x, y, width, height) {
   if (getPlacedBlocks(currentPlayer).length === 0) {
     return (
@@ -449,6 +558,9 @@ function isConnected(x, y, width, height) {
   return false;
 }
 
+
+
+//this fucntion determines wether the cell(block) at the positions is adjacent to any placed cells
 function isAdjacentToCurrentPlayer(row, col) {
   const adjacentPositions = [
     [row - 1, col],
@@ -461,9 +573,11 @@ function isAdjacentToCurrentPlayer(row, col) {
   );
 }
 
+
 function getPlacedBlocks(player) {
   return board.flat().filter((cell) => cell === player);
 }
+
 
 function canPlaceBlock(x, y, width, height) {
   for (let row = y; row < y + height; row++) {
@@ -578,6 +692,8 @@ function canPlayerPlace() {
 }
 
 
+
+//function to handle exiting game
 function exitGame() {
 
   const confirmation = confirm("Are you sure you want to be a loser? Your enemy will win if you leave.");
@@ -611,13 +727,15 @@ function exitGame() {
     
     console.log("Game exited. Returning to menu.");
   } else {
-    // If the player cancels, just log the action and do nothing
     console.log("Exit game canceled by the player.");
   }
 }
 
+
 document.getElementById("exitButton").addEventListener("click", exitGame);
 
+
+//set up listener to minitor wether the host (player1) leave the game, if so, the game for player 2 will be alerted and reloaded
 function setupLobbyTerminationListener(lobbyCode) {
   listenToChanges(`lobbies/${lobbyCode}`, (data) => {
     if (!data) {

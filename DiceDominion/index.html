@@ -11,11 +11,11 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    
     <!-- Toggle Theme Button -->
     <div
       id="toggleTheme"
-      style="position: absolute; top: 10px; right: 10px; cursor: pointer"
-    >
+      style="position: absolute; top: 10px; right: 10px; cursor: pointer">
       <button onclick="toggleTheme()">Toggle Dark/Light Mode</button>
     </div>
 
@@ -59,6 +59,7 @@
       /><br /><br />
       <label for="playerColor">Player 1 Color:</label>
       <input type="color" id="playerColor" value="#0073e6" /><br /><br />
+      <!-- startGame(false) because the game shouldnt start when lobby is created (player 2 hasnt joined yet) -->
       <button onclick="startGame(false)">Create Lobby</button>
       <label for="isPublicLobby">Public Lobby:</label>
       <input type="checkbox" id="isPublicLobby" checked /><br /><br />
@@ -74,6 +75,7 @@
           placeholder="Lobby Code"
           maxlength="10"
         />
+         <!-- startGame(true) because the game should start when lobby is joined -->
         <button onclick="startGame(true)">Join Lobby</button>
       </div>
     </div>
@@ -116,7 +118,7 @@
 
     <!-- Firebase Integration Section -->
     <div id="firebaseSection">
-      <h2>Firebase Realtime Database</h2>
+     <!--  <h2>Firebase Realtime Database</h2> -->
       <div id="data"></div>
       <div
         id="lobbyCodeDisplay"
