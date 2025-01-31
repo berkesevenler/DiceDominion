@@ -76,9 +76,11 @@ html {
 
 .player1 {
   background-color: var(--player1-color);
+  background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 3px, transparent 5px, transparent 10px);
 }
 .player2 {
   background-color: var(--player2-color);
+  background-image: repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.2) 0px, rgba(0, 0, 0, 0.2) 3px, transparent 5px, transparent 10px);
 }
 .preview-blue {
   background-color: var(--player1-color, rgba(0, 115, 230, 0.3));
