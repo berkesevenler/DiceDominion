@@ -423,21 +423,15 @@ function previewBlock(event) {
   const previewClass = currentPlayer === 1 ? "preview-blue" : "preview-red";
   const [width, height] = applyRotation(dice1, dice2);
 
-  if (
-    isWithinBounds(startX, startY, width, height) &&
-    isConnected(startX, startY, width, height)
-  ) {
-    for (let row = startY; row < startY + height; row++) {
-      for (let col = startX; col < startX + width; col++) {
-        if (board[row][col] === null) {
-          document
-            .querySelector(`[data-row="${row}"][data-col="${col}"]`)
-            .classList.add(previewClass);
-        }
+  for (let row = startY; row < startY + height; row++) {
+    for (let col = startX; col < startX + width; col++) {
+      const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      if (cell && board[row][col] === null) {
+        cell.classList.add(previewClass);
       }
     }
-    isPreviewing = true;
   }
+  isPreviewing = true;
 }
 
 
