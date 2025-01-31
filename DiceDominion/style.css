@@ -274,9 +274,9 @@ button:disabled {
 }
 
 #rerollButton {
-  background-color: #4a90e2;
+  background-color: #ff8c00;
 }
 
 #rerollButton:hover {
-  background-color: #357abd;
+  background-color: #fefefe;
 }
