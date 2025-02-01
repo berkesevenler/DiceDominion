@@ -413,31 +413,35 @@ window.rollDice = rollDice;
 
 
 
-//function to see a preview of the blocks you will place but havent placed yet, when hovered around the board
+//helper function to calculate centered position
+function getCenteredPosition(clickedX, clickedY, width, height) {
+  return {
+    x: clickedX - Math.floor(width/2),
+    y: clickedY - Math.floor(height/2)
+  };
+}
+
+
 function previewBlock(event) {
   if (!dice1 || !dice2 || !canPlaceBlockFlag) return;
   clearPreview();
 
-  const startX = parseInt(event.target.dataset.col);
-  const startY = parseInt(event.target.dataset.row);
-  const previewClass = currentPlayer === 1 ? "preview-blue" : "preview-red";
   const [width, height] = applyRotation(dice1, dice2);
+  const clickedX = parseInt(event.target.dataset.col);
+  const clickedY = parseInt(event.target.dataset.row);
+  const { x: startX, y: startY } = getCenteredPosition(clickedX, clickedY, width, height);
+  
+  const previewClass = currentPlayer === 1 ? "preview-blue" : "preview-red";
 
-  if (
-    isWithinBounds(startX, startY, width, height) &&
-    isConnected(startX, startY, width, height)
-  ) {
-    for (let row = startY; row < startY + height; row++) {
-      for (let col = startX; col < startX + width; col++) {
-        if (board[row][col] === null) {
-          document
-            .querySelector(`[data-row="${row}"][data-col="${col}"]`)
-            .classList.add(previewClass);
-        }
+  for (let row = startY; row < startY + height; row++) {
+    for (let col = startX; col < startX + width; col++) {
+      const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      if (cell && board[row][col] === null) {
+        cell.classList.add(previewClass);
       }
     }
-    isPreviewing = true;
   }
+  isPreviewing = true;
 }
 
 
@@ -486,9 +490,10 @@ function handleGameOver(lobbyCode, winningPlayer) {
 function placeBlock(event) {
   if (!canPlaceBlockFlag) return;
 
-  const startX = parseInt(event.target.dataset.col);
-  const startY = parseInt(event.target.dataset.row);
   const [width, height] = applyRotation(dice1, dice2);
+  const clickedX = parseInt(event.target.dataset.col);
+  const clickedY = parseInt(event.target.dataset.row);
+  const { x: startX, y: startY } = getCenteredPosition(clickedX, clickedY, width, height);
 
   if (
     isWithinBounds(startX, startY, width, height) &&
