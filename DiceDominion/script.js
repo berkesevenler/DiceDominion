@@ -29,6 +29,11 @@ const skipTurnCount = {
   2: 0,
 };
 
+const REROLL_LIMIT = 3;
+const rerollCount = {
+  1: 0,
+  2: 0,
+};
 
 //function for stating whos trun it is. (on the top left side of the game)
 function displayTurnStatus(lobbyCode) {
@@ -400,6 +405,8 @@ export function rollDice() {
   rotation = 0;
   hasRolledDice = true;
 
+  showRerollButton();
+
   if (!canPlayerPlace()) {
     handleNoValidMoves();
   } else {
@@ -650,6 +657,7 @@ function endTurn() {
   ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
   hideSkipTurnButton();
   hideDeclareWinnerButton();
+  hideRerollButton();
   clearPreview();
 }
 
@@ -749,4 +757,51 @@ function setupLobbyTerminationListener(lobbyCode) {
     }
   });
 }
+
+
+function handleReroll() {
+  if (!isPlayerTurn()) return;
+  if (!hasRolledDice) {
+    document.getElementById("status").innerText = 
+      `Player ${currentPlayer}, you need to roll the dice first.`;
+    return;
+  }
+  if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
+    document.getElementById("status").innerText = 
+      `Player ${currentPlayer}, you have used all your re-rolls.`;
+    return;
+  }
+  rerollCount[currentPlayer]++;
+
+  dice1 = Math.floor(Math.random() * 6) + 1;
+  dice2 = Math.floor(Math.random() * 6) + 1;
+
+  document.getElementById("status").innerText = 
+    `Player ${currentPlayer} re-rolled: ${dice1}x${dice2} (${REROLL_LIMIT - rerollCount[currentPlayer]} re-rolls remaining)`;
+  document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
+
+  rotation = 0;
+  clearPreview();
+
+  if (!canPlayerPlace()) {
+    handleNoValidMoves();
+  } else {
+    hideSkipTurnButton();
+    hideDeclareWinnerButton();
+  }
+  if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
+    hideRerollButton();
+  }
+}
+function showRerollButton() {
+  const rerollBtn = document.getElementById("rerollButton");
+  if (rerollCount[currentPlayer] < REROLL_LIMIT) {
+    rerollBtn.style.display = "block";
+    rerollBtn.innerText = `Re-roll`;
+  }
+}
+function hideRerollButton() {
+  document.getElementById("rerollButton").style.display = "none";
+}
+window.handleReroll = handleReroll;
 
