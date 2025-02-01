@@ -117,14 +117,6 @@ button:hover {
 .exit-button {
   position: absolute;
   top: 40px;
-  left: 290px;
-  padding: 10px 20px;
-  background-color: #ffa41c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
   z-index: 10;
 }
 
