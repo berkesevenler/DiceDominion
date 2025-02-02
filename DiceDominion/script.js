@@ -651,7 +651,10 @@ export function skipTurn() {
       ).innerText = 
         `${playerName || `Player ${currentPlayer}`} skipped their turn. ` +
         `${skipTurnLimit - skipTurnCount[currentPlayer]} skips remaining.`;
-      endTurn();
+
+      setTimeout(() => {
+        endTurn();
+      }, 2500);
     } else {
       handleNoValidMoves();
     }
