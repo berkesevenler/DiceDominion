@@ -1,4 +1,3 @@
-body,
 html {
   display: flex;
   justify-content: center;
@@ -7,7 +6,26 @@ html {
   margin: 0;
   padding-top: 50px;
   font-family: "Roboto", sans-serif;
-  background-color: #f3f4f6;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100vh;
+  margin: 0;
+  padding-top: 50px;
+  font-family: "Roboto", sans-serif;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      #6a402f 0px,
+      #6a402f 93px,
+      #3d261b 97px,
+      #3d261b 100px
+    );
+
+  background-attachment: fixed;
 }
 
 #container {
