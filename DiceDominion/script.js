@@ -42,21 +42,23 @@ function displayTurnStatus(lobbyCode) {
   const turnStatusElement = document.getElementById("turnStatusDisplay");
 
   listenToChanges(`lobbies/${lobbyCode}/turnStatus`, (turnStatus) => {
-    let turnText = "Waiting for the game to start...";
-    if (turnStatus === 1) {
-      readData(`lobbies/${lobbyCode}/players/player1/name`).then((name) => {
-        turnText = `It's ${name}'s turn!`;
-        turnStatusElement.innerText = turnText;
+    currentPlayer = turnStatus;
+
+    readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then((name) => {
+      turnStatusElement.innerText = `It's ${name || `Player ${currentPlayer}`}'s turn!`;
+    });
+
+    if (currentPlayer === myPlayerCode) {
+      // It's the current player's turn
+      readData(`lobbies/${lobbyCode}/players/player${myPlayerCode}/name`).then((name) => {
+        document.getElementById("status").innerText = `Your turn, ${name || `Player ${myPlayerCode}`}!`;
       });
-      
-    } else if (turnStatus === 2) {
-      readData(`lobbies/${lobbyCode}/players/player2/name`).then((name) => {
-        turnText = `It's ${name}'s turn!`;
-        turnStatusElement.innerText = turnText;
+    } else {
+      // It's the opponent's turn
+      readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then((name) => {
+        document.getElementById("status").innerText = `It's ${name || `Player ${currentPlayer}`}'s turn – please wait.`;
       });
     }
-    currentPlayer = turnStatus;
-    
 
     fetchBoardFromServer(lobbyCode, myPlayerCode);
   });
@@ -690,11 +692,6 @@ function endTurn() {
   hasRolledDice = false;
   
   document.getElementById("controls").style.display = "none";
-
-  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
-    document.getElementById("status").innerText = 
-      `${playerName || `Player ${currentPlayer}`}'s turn. Wait him.`;
-  });
   hideSkipTurnButton();
   hideDeclareWinnerButton();
   hideRerollButton();
