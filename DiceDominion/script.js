@@ -44,12 +44,19 @@ function displayTurnStatus(lobbyCode) {
   listenToChanges(`lobbies/${lobbyCode}/turnStatus`, (turnStatus) => {
     let turnText = "Waiting for the game to start...";
     if (turnStatus === 1) {
-      turnText = "It's Player 1's turn!";
+      readData(`lobbies/${lobbyCode}/players/player1/name`).then((name) => {
+        turnText = `It's ${name}'s turn!`;
+        turnStatusElement.innerText = turnText;
+      });
+      
     } else if (turnStatus === 2) {
-      turnText = "It's Player 2's turn!";
+      readData(`lobbies/${lobbyCode}/players/player2/name`).then((name) => {
+        turnText = `It's ${name}'s turn!`;
+        turnStatusElement.innerText = turnText;
+      });
     }
     currentPlayer = turnStatus;
-    turnStatusElement.innerText = turnText;
+    
 
     fetchBoardFromServer(lobbyCode, myPlayerCode);
   });
@@ -106,9 +113,11 @@ function generateLobbyCode() {
 //determines whos turn it is, when a player tries to place a block even though its not their turn
 function isPlayerTurn() {
   if (currentPlayer !== myPlayerCode) {
-    document.getElementById(
+    readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then((opponentName) => {
+      document.getElementById(
       "status"
-    ).innerText = `It's not your turn! Player ${currentPlayer} is playing.`;
+    ).innerText = `It's not your turn! ${opponentName || `Player ${currentPlayer}`} is playing.`;
+    });
     return false;
   }
   return true;
@@ -171,9 +180,11 @@ function initializeGame(join) {
     if (!players || !players.player1) {
       myPlayerCode = 1;
       const player1ChosenColor = document.getElementById("playerColor").value;
+      const player1ChosenName = document.getElementById("playerName").value;
       //save player 1s data to firebase
       writeData(`lobbies/${lobbyCode}/players/player1`, {
         uid: auth.currentUser.uid,
+        name: player1ChosenName,
         color: player1ChosenColor,
       }).then(() => {
         setupPresenceMonitoring(lobbyCode, 1);
@@ -192,16 +203,18 @@ function initializeGame(join) {
         Array(boardSize).fill(null)
       );
       createBoard();
-      document.getElementById("status").innerText = "You are Player 1!";
+      document.getElementById("status").innerText = `You are Player 1, ${player1ChosenName}!`;
     } 
 
     //player 2 setup
     else if (!players.player2) {
       myPlayerCode = 2;
       const player2ChosenColor = document.getElementById("playerColor").value;
+      const player2ChosenName = document.getElementById("playerName").value;
       
       writeData(`lobbies/${lobbyCode}/players/player2`, {
         uid: auth.currentUser.uid,
+        name: player2ChosenName,
         color: player2ChosenColor,
       }).then(() => {
         setupPresenceMonitoring(lobbyCode, 2);
@@ -223,7 +236,7 @@ function initializeGame(join) {
         createBoard();
       });
 
-      document.getElementById("status").innerText = "You are Player 2!";
+      document.getElementById("status").innerText = `You are Player 2, ${player2ChosenName}!`;
     } 
     
     //if lobby is full
@@ -296,7 +309,7 @@ function initializeChat(lobbyCode) {
       messageArray.forEach(msg => {
         const messageDiv = document.createElement("div");
         messageDiv.className = `chat-message player${msg.player}`;
-        messageDiv.textContent = msg.text;
+        messageDiv.textContent = `${msg.name}: ${msg.text}`;
         chatMessages.appendChild(messageDiv);
       });
     }
@@ -315,6 +328,8 @@ function sendMessage() {
   
   //.trim is for removing not needed white spaces from text
   const message = messageInput.value.trim();
+
+  const playerName = document.getElementById("playerName").value;
   
   if (message) {
     //creates a reference to the chat in firebase
@@ -323,6 +338,7 @@ function sendMessage() {
     //sets the message data in firebase
     chatRef.set({
       player: myPlayerCode,
+      name: playerName,
       text: message,
       timestamp: firebase.database.ServerValue.TIMESTAMP
     });
@@ -389,7 +405,7 @@ export function rollDice() {
   if (hasRolledDice) {
     document.getElementById(
       "status"
-    ).innerText = `Player ${currentPlayer}, you have already rolled the dice. Place your block or skip your turn.`;
+    ).innerText = `You have already rolled the dice. Place your block or skip your turn.`;
     return;
   }
 
@@ -397,9 +413,13 @@ export function rollDice() {
   dice2 = Math.floor(Math.random() * 6) + 1;
   document.getElementById(
     "status"
-  ).innerText = `Player ${currentPlayer} rolled ${dice1}x${dice2}`;
+  ).innerText = `You rolled ${dice1}x${dice2}`;
   document.getElementById("controls").style.display = "block";
-  document.getElementById("currentPlayerDisplay").innerText = currentPlayer;
+  
+  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
+    document.getElementById("currentPlayerDisplay").innerText = playerName || `Player ${currentPlayer}`;
+  });
+
   document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
   canPlaceBlockFlag = true;
   rotation = 0;
@@ -467,11 +487,14 @@ function clearPreview() {
 function displayGameOver(lobbyCode) {
   listenToChanges(`lobbies/${lobbyCode}/gameOver`, (gameOver) => {
     if (gameOver) {
-      const winner = gameOver === 1 ? "Player 1" : "Player 2";
-      document.getElementById(
-        "status"
-      ).innerText = `Game Over! ${winner} has won!`;
-      alert(`Game Over! ${winner} has won! Please start a new game.`);
+      readData(`lobbies/${lobbyCode}/players/player${gameOver}/name`).then(winnerName => {
+        
+        document.getElementById(
+          "status"
+        ).innerText = 
+          `Game Over! ${winnerName || `Player ${gameOver}`} has won!`;
+        alert(`Game Over! ${winnerName || `Player ${gameOver}`} has won! Please start a new game.`);
+      });
     }
   });
 }
@@ -480,12 +503,11 @@ function displayGameOver(lobbyCode) {
 
 //writes data to firebase when a player has won.
 function handleGameOver(lobbyCode, winningPlayer) {
-  cleanupPublicLobby(lobbyCode);
-  writeData(`lobbies/${lobbyCode}/gameOver`, winningPlayer)
-    .then(() => {
-      console.log(`Game over! Player ${winningPlayer} has won.`);
-    })
-    .catch((error) => {
+  readData(`lobbies/${lobbyCode}/players/player${winningPlayer}/name`).then(winnerName => {
+    console.log(`Game over! ${winnerName || `Player ${winningPlayer}`} has won.`);
+    cleanupPublicLobby(lobbyCode);
+    writeData(`lobbies/${lobbyCode}/gameOver`, winningPlayer);
+  }).catch((error) => {
       console.error("Failed to set game over state:", error);
     });
 }
@@ -528,7 +550,7 @@ function placeBlock(event) {
   } else {
     document.getElementById(
       "status"
-    ).innerText = `Player ${currentPlayer} cannot place block here.`;
+    ).innerText = `You cannot place block here.`;
   }
 }
 
@@ -610,40 +632,55 @@ function checkWinCondition() {
 }
 
 function declareWinner(winner) {
-  alert(`Player ${winner} wins!`);
-  handleGameOver(lobbyCode, winner);
-  location.reload();
+  readData(`lobbies/${lobbyCode}/players/player${winner}/name`).then((name) => {
+    alert(`${name || `Player ${winner}`} wins!`);
+    handleGameOver(lobbyCode, winner);
+    location.reload();
+  });
 }
 
 export function skipTurn() {
-  if (skipTurnCount[currentPlayer] < skipTurnLimit) {
-    skipTurnCount[currentPlayer]++;
-    document.getElementById(
-      "status"
-    ).innerText = `Player ${currentPlayer} skipped their turn. ${
-      skipTurnLimit - skipTurnCount[currentPlayer]
-    } skips remaining.`;
-    endTurn();
-  } else {
-    handleNoValidMoves();
-  }
+  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
+
+    if (skipTurnCount[currentPlayer] < skipTurnLimit) {
+      skipTurnCount[currentPlayer]++;
+      document.getElementById(
+        "status"
+      ).innerText = 
+        `${playerName || `Player ${currentPlayer}`} skipped their turn. ` +
+        `${skipTurnLimit - skipTurnCount[currentPlayer]} skips remaining.`;
+      endTurn();
+    } else {
+      handleNoValidMoves();
+    }
+  });
 }
 window.skipTurn = skipTurn;
 function handleNoValidMoves() {
-  if (skipTurnCount[currentPlayer] >= skipTurnLimit && !canPlayerPlace()) {
+  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(currentPlayerName => {
     const otherPlayer = currentPlayer === 1 ? 2 : 1;
-    document.getElementById(
-      "status"
-    ).innerText = `Player ${currentPlayer} cannot place block and has exhausted all skips. Player ${otherPlayer} wins.`;
-    showDeclareWinnerButton();
-  } else {
-    if (skipTurnCount[currentPlayer] < skipTurnLimit) {
-      document.getElementById(
-        "status"
-      ).innerText = `Player ${currentPlayer} cannot place block. You may skip your turn.`;
-      showSkipTurnButton();
-    }
-  }
+
+    readData(`lobbies/${lobbyCode}/players/player${otherPlayer}/name`).then(otherPlayerName => {
+
+      if (skipTurnCount[currentPlayer] >= skipTurnLimit && !canPlayerPlace()) {
+        
+        document.getElementById(
+          "status"
+        ).innerText = 
+          `You cannot place block and have exhausted all skips. ` +
+          `${otherPlayerName || `Player ${otherPlayer}`} wins.`;
+        showDeclareWinnerButton();
+      } else {
+        if (skipTurnCount[currentPlayer] < skipTurnLimit) {
+          document.getElementById(
+            "status"
+          ).innerText = 
+            `You cannot place block. You may skip your turn.`;
+          showSkipTurnButton();
+        }
+      }
+    });
+  });
 }
 
 function endTurn() {
@@ -651,10 +688,13 @@ function endTurn() {
   writeData(`lobbies/${lobbyCode}/turnStatus`, currentPlayer);
   canPlaceBlockFlag = false;
   hasRolledDice = false;
+  
   document.getElementById("controls").style.display = "none";
-  document.getElementById(
-    "status"
-  ).innerText = `Player ${currentPlayer}'s turn. Roll the dice.`;
+
+  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
+    document.getElementById("status").innerText = 
+      `${playerName || `Player ${currentPlayer}`}'s turn. Wait him.`;
+  });
   hideSkipTurnButton();
   hideDeclareWinnerButton();
   hideRerollButton();
@@ -674,7 +714,10 @@ function hideSkipTurnButton() {
 function showDeclareWinnerButton() {
   const otherPlayer = currentPlayer === 1 ? 2 : 1;
   document.getElementById("declareWinnerButton").style.display = "block";
-  document.getElementById("winnerPlayerDisplay").innerText = otherPlayer;
+
+  readData(`lobbies/${lobbyCode}/players/player${otherPlayer}/name`).then(winnerName => {
+    document.getElementById("winnerPlayerDisplay").innerText = winnerName || `Player ${otherPlayer}`;
+  });
 }
 
 function hideDeclareWinnerButton() {
@@ -761,37 +804,40 @@ function setupLobbyTerminationListener(lobbyCode) {
 
 function handleReroll() {
   if (!isPlayerTurn()) return;
-  if (!hasRolledDice) {
+
+  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
+    if (!hasRolledDice) {
+      document.getElementById("status").innerText = 
+        `${playerName || `Player ${currentPlayer}`}, you need to roll the dice first.`;
+        return; 
+    }
+    if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
+      document.getElementById("status").innerText = 
+          `${playerName || `Player ${currentPlayer}`}, you have used all your re-rolls.`;
+      return;
+    }
+    rerollCount[currentPlayer]++;
+
+    dice1 = Math.floor(Math.random() * 6) + 1;
+    dice2 = Math.floor(Math.random() * 6) + 1;
+
     document.getElementById("status").innerText = 
-      `Player ${currentPlayer}, you need to roll the dice first.`;
-    return;
-  }
-  if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
-    document.getElementById("status").innerText = 
-      `Player ${currentPlayer}, you have used all your re-rolls.`;
-    return;
-  }
-  rerollCount[currentPlayer]++;
+      `${playerName || `Player ${currentPlayer}`} re-rolled: ${dice1}x${dice2} ` + `(${REROLL_LIMIT - rerollCount[currentPlayer]} re-rolls remaining)`;
+    document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
 
-  dice1 = Math.floor(Math.random() * 6) + 1;
-  dice2 = Math.floor(Math.random() * 6) + 1;
+    rotation = 0;
+    clearPreview();
 
-  document.getElementById("status").innerText = 
-    `Player ${currentPlayer} re-rolled: ${dice1}x${dice2} (${REROLL_LIMIT - rerollCount[currentPlayer]} re-rolls remaining)`;
-  document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
-
-  rotation = 0;
-  clearPreview();
-
-  if (!canPlayerPlace()) {
-    handleNoValidMoves();
-  } else {
-    hideSkipTurnButton();
-    hideDeclareWinnerButton();
-  }
-  if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
-    hideRerollButton();
-  }
+    if (!canPlayerPlace()) {
+      handleNoValidMoves();
+    } else {
+      hideSkipTurnButton();
+      hideDeclareWinnerButton();
+    }
+    if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
+      hideRerollButton();
+    }
+  });
 }
 function showRerollButton() {
   const rerollBtn = document.getElementById("rerollButton");
