@@ -6,6 +6,7 @@ html {
   margin: 0;
   padding-top: 50px;
   font-family: "Roboto", sans-serif;
+  color: #2B2B2B;
 }
 
 body {
@@ -30,7 +31,7 @@ body {
 
 #container {
   text-align: center;
-  background: #ffffff;
+  background: #fffaea;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
   border-radius: 8px;
@@ -40,7 +41,7 @@ body {
 
 #menu {
   text-align: center;
-  background: #ffffff;
+  background: #fffaea;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
   border-radius: 8px;
@@ -53,13 +54,12 @@ body {
   top: 100px;
   left: 10px;
   width: 280px;
-  background: #ffffff;
+  background: #fffaea;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
   border-radius: 8px;
   font-size: 14px;
   line-height: 1.6;
-  color: #374151;
 }
 
 #instructions h2 {
@@ -111,8 +111,8 @@ body {
 }
 
 button {
-  background-color: #ffa41c;
-  border: none;
+  background-color: #e0ab49;
+  border: #472c13 5px;
   color: white;
   padding: 10px 20px;
   text-align: center;
@@ -123,34 +123,24 @@ button {
   cursor: pointer;
   border-radius: 5px;
   transition: background-color 0.3s ease, transform 0.3s ease;
+  box-shadow: 1px 2px 1px rgba(0, 0, 0, 0.6);
 }
 
 button:hover {
-  background-color: #ff8c00;
+  background-color: #d58d55;
   transform: scale(1.05);
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.6);
 }
 
 #status {
   font-size: 18px;
-  color: #374151;
 }
 
 .exit-button {
   position: absolute;
   top: 40px;
   left: 290px;
-  padding: 10px 20px;
-  background-color: #ffa41c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  cursor: pointer;
   z-index: 10;
-}
-
-.exit-button:hover {
-  background-color: #ff6600;
 }
 
 @keyframes fadeIn {
@@ -203,7 +193,7 @@ body.dark-mode #instructions {
   align-items: center;
   padding: 10px;
   margin: 5px 0;
-  background-color: #f5f5f5;
+  background-color: #fff3d1;
   border-radius: 5px;
 }
 
@@ -224,7 +214,7 @@ body.dark-mode .public-lobby-item {
   transform: translateY(-50%);
   width: 300px;
   height: 400px;
-  background: #ffffff;
+  background: #fffaea;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -292,12 +282,4 @@ body.dark-mode #messageInput {
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-#rerollButton {
-  background-color: #ff8c00;
-}
-
-#rerollButton:hover {
-  background-color: #fefefe;
 }
