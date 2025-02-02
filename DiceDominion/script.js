@@ -821,8 +821,15 @@ function handleReroll() {
     dice1 = Math.floor(Math.random() * 6) + 1;
     dice2 = Math.floor(Math.random() * 6) + 1;
 
-    document.getElementById("status").innerText = 
-      `${playerName || `Player ${currentPlayer}`} re-rolled: ${dice1}x${dice2} ` + `(${REROLL_LIMIT - rerollCount[currentPlayer]} re-rolls remaining)`;
+    const remaining = REROLL_LIMIT - rerollCount[currentPlayer];
+    let statusMessage = `${playerName || `Player ${currentPlayer}`} re-rolled: ${dice1}x${dice2}`;
+    statusMessage += ` (${remaining} re-roll${remaining !== 1 ? 's' : ''} remaining)`;
+
+    if (remaining <= 0) {
+      statusMessage = `${playerName || `Player ${currentPlayer}`}, you have used all your re-rolls.`;
+    }
+
+    document.getElementById("status").innerText = statusMessage;
     document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
 
     rotation = 0;
@@ -834,16 +841,17 @@ function handleReroll() {
       hideSkipTurnButton();
       hideDeclareWinnerButton();
     }
-    if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
-      hideRerollButton();
-    }
+    showRerollButton();
   });
 }
 function showRerollButton() {
   const rerollBtn = document.getElementById("rerollButton");
-  if (rerollCount[currentPlayer] < REROLL_LIMIT) {
+  const remaining = REROLL_LIMIT - rerollCount[currentPlayer];
+  if (remaining > 0) {
     rerollBtn.style.display = "block";
-    rerollBtn.innerText = `Re-roll`;
+    `Re-roll (${remaining} left)`;
+  } else {
+    rerollBtn.style.display = "none";
   }
 }
 function hideRerollButton() {
