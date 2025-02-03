@@ -42,21 +42,23 @@ function displayTurnStatus(lobbyCode) {
   const turnStatusElement = document.getElementById("turnStatusDisplay");
 
   listenToChanges(`lobbies/${lobbyCode}/turnStatus`, (turnStatus) => {
-    let turnText = "Waiting for the game to start...";
-    if (turnStatus === 1) {
-      readData(`lobbies/${lobbyCode}/players/player1/name`).then((name) => {
-        turnText = `It's ${name}'s turn!`;
-        turnStatusElement.innerText = turnText;
+    currentPlayer = turnStatus;
+
+    readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then((name) => {
+      turnStatusElement.innerText = `It's ${name || `Player ${currentPlayer}`}'s turn!`;
+    });
+
+    if (currentPlayer === myPlayerCode) {
+      // It's the current player's turn
+      readData(`lobbies/${lobbyCode}/players/player${myPlayerCode}/name`).then((name) => {
+        document.getElementById("status").innerText = `Your turn, ${name || `Player ${myPlayerCode}`}!`;
       });
-      
-    } else if (turnStatus === 2) {
-      readData(`lobbies/${lobbyCode}/players/player2/name`).then((name) => {
-        turnText = `It's ${name}'s turn!`;
-        turnStatusElement.innerText = turnText;
+    } else {
+      // It's the opponent's turn
+      readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then((name) => {
+        document.getElementById("status").innerText = `It's ${name || `Player ${currentPlayer}`}'s turn – please wait.`;
       });
     }
-    currentPlayer = turnStatus;
-    
 
     fetchBoardFromServer(lobbyCode, myPlayerCode);
   });
@@ -640,6 +642,9 @@ function declareWinner(winner) {
 }
 
 export function skipTurn() {
+  const skipButton = document.getElementById("skipTurnButton");
+  skipButton.disabled = true;
+
   readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
 
     if (skipTurnCount[currentPlayer] < skipTurnLimit) {
@@ -649,10 +654,17 @@ export function skipTurn() {
       ).innerText = 
         `${playerName || `Player ${currentPlayer}`} skipped their turn. ` +
         `${skipTurnLimit - skipTurnCount[currentPlayer]} skips remaining.`;
-      endTurn();
+
+      setTimeout(() => {
+        endTurn();
+        skipButton.disabled = false;
+      }, 2500);
     } else {
       handleNoValidMoves();
+      skipButton.disabled = false;
     }
+  }).catch(() => {
+    skipButton.disabled = false;
   });
 }
 window.skipTurn = skipTurn;
@@ -690,11 +702,6 @@ function endTurn() {
   hasRolledDice = false;
   
   document.getElementById("controls").style.display = "none";
-
-  readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
-    document.getElementById("status").innerText = 
-      `${playerName || `Player ${currentPlayer}`}'s turn. Wait him.`;
-  });
   hideSkipTurnButton();
   hideDeclareWinnerButton();
   hideRerollButton();
@@ -702,8 +709,10 @@ function endTurn() {
 }
 
 function showSkipTurnButton() {
+  const skipButton = document.getElementById("skipTurnButton");
   if (skipTurnCount[currentPlayer] < skipTurnLimit) {
-    document.getElementById("skipTurnButton").style.display = "block";
+    skipButton.style.display = "block";
+    skipButton.disabled = false;
   }
 }
 
@@ -821,8 +830,15 @@ function handleReroll() {
     dice1 = Math.floor(Math.random() * 6) + 1;
     dice2 = Math.floor(Math.random() * 6) + 1;
 
-    document.getElementById("status").innerText = 
-      `${playerName || `Player ${currentPlayer}`} re-rolled: ${dice1}x${dice2} ` + `(${REROLL_LIMIT - rerollCount[currentPlayer]} re-rolls remaining)`;
+    const remaining = REROLL_LIMIT - rerollCount[currentPlayer];
+    let statusMessage = `${playerName || `Player ${currentPlayer}`} re-rolled: ${dice1}x${dice2}`;
+    statusMessage += ` (${remaining} re-roll${remaining !== 1 ? 's' : ''} remaining)`;
+
+    if (remaining <= 0) {
+      statusMessage = `${playerName || `Player ${currentPlayer}`}, you have used all your re-rolls.`;
+    }
+
+    document.getElementById("status").innerText = statusMessage;
     document.getElementById("diceResult").innerText = `${dice1}x${dice2}`;
 
     rotation = 0;
@@ -834,16 +850,17 @@ function handleReroll() {
       hideSkipTurnButton();
       hideDeclareWinnerButton();
     }
-    if (rerollCount[currentPlayer] >= REROLL_LIMIT) {
-      hideRerollButton();
-    }
+    showRerollButton();
   });
 }
 function showRerollButton() {
   const rerollBtn = document.getElementById("rerollButton");
-  if (rerollCount[currentPlayer] < REROLL_LIMIT) {
+  const remaining = REROLL_LIMIT - rerollCount[currentPlayer];
+  if (remaining > 0) {
     rerollBtn.style.display = "block";
-    rerollBtn.innerText = `Re-roll`;
+    `Re-roll (${remaining} left)`;
+  } else {
+    rerollBtn.style.display = "none";
   }
 }
 function hideRerollButton() {
