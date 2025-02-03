@@ -642,6 +642,9 @@ function declareWinner(winner) {
 }
 
 export function skipTurn() {
+  const skipButton = document.getElementById("skipTurnButton");
+  skipButton.disabled = true;
+
   readData(`lobbies/${lobbyCode}/players/player${currentPlayer}/name`).then(playerName => {
 
     if (skipTurnCount[currentPlayer] < skipTurnLimit) {
@@ -654,10 +657,14 @@ export function skipTurn() {
 
       setTimeout(() => {
         endTurn();
+        skipButton.disabled = false;
       }, 2500);
     } else {
       handleNoValidMoves();
+      skipButton.disabled = false;
     }
+  }).catch(() => {
+    skipButton.disabled = false;
   });
 }
 window.skipTurn = skipTurn;
@@ -702,8 +709,10 @@ function endTurn() {
 }
 
 function showSkipTurnButton() {
+  const skipButton = document.getElementById("skipTurnButton");
   if (skipTurnCount[currentPlayer] < skipTurnLimit) {
-    document.getElementById("skipTurnButton").style.display = "block";
+    skipButton.style.display = "block";
+    skipButton.disabled = false;
   }
 }
 
