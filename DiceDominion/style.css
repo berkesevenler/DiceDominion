@@ -29,6 +29,94 @@ body {
   background-attachment: fixed;
 }
 
+/* Stabilo point 88 */
+.ballpoint {
+  position: relative;
+  min-width: 20px;
+  height: 330px;
+  background-color: #fbb84d;
+  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Tip */
+.ballpoint::before {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 10px solid transparent;
+  top: -18px;
+  left: 1px;
+}
+
+.pen1::before {
+  border-bottom: 18px solid #1e26ff;
+}
+
+.pen2::before {
+  border-bottom: 18px solid #2a9560;
+}
+
+/* Metal base near the tip */
+.ballpoint::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 10px;
+  background: #858585;
+  top: -10px;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%); /* Trapeze */
+}
+
+/* White lines */
+.line {
+  position: absolute;
+  width: 2px;
+  height: 330px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.line1 {
+  left: 20%;
+}
+
+.line2 {
+  right: 20%;
+}
+
+/* Pen tail */
+.tail {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 0px 0px 4px 4px;
+  top: 100%;
+  left: 3px
+}
+
+.tail1 {
+  background: #1e26ff;
+}
+
+.tail2 {
+  background: #2a9560;
+}
+
+/* Pens rotation */
+.pen1 {
+  top: 10%;
+  left: 125%;
+  transform: rotate(-30deg);
+}
+
+.pen2 {
+  top: 20%;
+  right: 25%;
+  transform: rotate(25deg);
+}
+
+
 #container {
   text-align: center;
   background: #fffaea;
