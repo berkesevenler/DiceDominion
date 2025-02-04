@@ -6,7 +6,7 @@ html {
   margin: 0;
   padding-top: 50px;
   font-family: "Roboto", sans-serif;
-  color: #2B2B2B;
+  color: #2b2b2b;
 }
 
 body {
@@ -231,50 +231,6 @@ button:hover {
   z-index: 10;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-body.dark-mode {
-  background-color: #121212;
-  color: #ffffff;
-}
-
-body.dark-mode #container,
-body.dark-mode #menu {
-  background: #1e1e1e;
-  color: #ffffff;
-  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode button {
-  background-color: #ffa41c;
-  color: #ffffff;
-}
-
-body.dark-mode button:hover {
-  background-color: #ff8c00;
-}
-
-body.dark-mode .cell {
-  border: 1px solid #444;
-}
-
-body.dark-mode #board {
-  border: 2px solid #444;
-}
-
-body.dark-mode #instructions {
-  background: #1e1e1e;
-  color: #ffffff;
-  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-}
-
 .public-lobby-item {
   display: flex;
   justify-content: space-between;
@@ -283,10 +239,6 @@ body.dark-mode #instructions {
   margin: 5px 0;
   background-color: #fff3d1;
   border-radius: 5px;
-}
-
-body.dark-mode .public-lobby-item {
-  background-color: #2d2d2d;
 }
 
 #publicLobbiesList {
@@ -307,11 +259,6 @@ body.dark-mode .public-lobby-item {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-body.dark-mode #chatContainer {
-  background: #1e1e1e;
-  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
-}
-
 #chatBox {
   display: flex;
   flex-direction: column;
@@ -325,10 +272,6 @@ body.dark-mode #chatContainer {
   border-bottom: 1px solid #e5e7eb;
 }
 
-body.dark-mode #chatMessages {
-  border-bottom: 1px solid #444;
-}
-
 #chatInput {
   display: flex;
   padding: 10px;
@@ -340,12 +283,6 @@ body.dark-mode #chatMessages {
   padding: 8px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
-}
-
-body.dark-mode #messageInput {
-  background: #2d2d2d;
-  border: 1px solid #444;
-  color: #ffffff;
 }
 
 .chat-message {
@@ -368,6 +305,63 @@ body.dark-mode #messageInput {
 }
 
 button:disabled {
+  transform: none;
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: 1px 2px 1px rgba(0, 0, 0, 0.6) !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
+/*Dark Themes*/
+body.dark-mode {
+  color: #fffaea;
+}
+
+body.dark-mode #container,
+body.dark-mode #menu,
+body.dark-mode #instructions,
+body.dark-mode #chatContainer {
+  background: #1e1e1e;
+  color: #fffaea;
+  box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode button {
+  background-color: #6d2e18;
+}
+
+body.dark-mode button:hover {
+  background-color: #ad4a2c;
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+body.dark-mode .cell {
+  border: 1px solid #444;
+}
+
+body.dark-mode #board {
+  border: 2px solid #444;
+}
+
+body.dark-mode .public-lobby-item {
+  background-color: #2d2d2d;
+}
+
+body.dark-mode #chatMessages {
+  border-bottom: 1px solid #444;
+}
+
+body.dark-mode #messageInput {
+  background: #2d2d2d;
+  border: 1px solid #444;
+  color: #fffaea;
 }
