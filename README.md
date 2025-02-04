@@ -41,7 +41,7 @@ git clone https://github.com/berkesevenler/DiceDominion.git
 ```
 and
 ``` sh
-cd dice-dominion
+cd DiceDominion
 ```
 
 ### **2️. Install Dependencies: Dice Dominion now uses Firebase for online multiplayer. You will need to install the necessary dependencies:**
@@ -52,7 +52,7 @@ npm install
 ### **3️. Set Up Firebase**
 - Go to Firebase Console and create a new project.
 - Set up Firebase Realtime Database and Authentication.
-- Copy your Firebase configuration and update the firebaseConfig object in `script.js`.
+- Copy your Firebase configuration and update the firebaseConfig object in `index.html`.
 
 ### **4️. Run the Game** 
 To start the game locally with Firebase support, you can use a local server:
