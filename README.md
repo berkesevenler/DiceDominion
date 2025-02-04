@@ -2,6 +2,13 @@
 
 A strategic, multiplayer dice-based board game where players take turns rolling two ***DICE***, placing blocks whose size is based on the results of the dice on a grid, and place as many as possible in an attempt to ***DOMINATE*** the board! Play against friends in private or public lobbies and destroy them!
 
+### Teammates
+
+* **Can Hacioglu**
+* **Berke Sevenler**
+* **Elvin Alirzayev**
+* **Sabina Grisi** 
+
 ## Table of contents
 
 * [Introduction](#introduction)
@@ -20,7 +27,7 @@ A strategic, multiplayer dice-based board game where players take turns rolling 
 
 Welcome to **Dice Dominion**, a strategy-based multiplayer board game that challenges players to think ahead, adapt, and compete for dominance. This project was developed as part of our university coursework called **Bachelor Project**, with the goal of designing *"awesone software as a team to achieve greater results than you would be able to on your own"*.   
 
-The idea for **Dice Dominion** came from dice that one of us had at home, a notebook, two stabilo pens, and our desire to create a game that we could enjoy together, inspired by classic tile-placement mechanics and bored-students-classroom-games with an added element of chance through dice rolls.
+The idea for **Dice Dominion** came from dice that one of us had at home, a notebook, two stabilo pens, and our desire to create a game that we could enjoy together, inspired by classic tile-placement mechanics and bored-student classroom games with an added element of chance through dice rolls.
 
 ### What does this software do?  
 - Provides an interactive, web-based board game where players take turns rolling dice and placing blocks.  
