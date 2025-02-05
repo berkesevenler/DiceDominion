@@ -4,10 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dice Dominion</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -34,12 +30,24 @@
       <p>Have fun and may the best strategist win!</p>
     </div>
 
+    <!-- Stabilo point 88 -->
+    <div class="ballpoint pen1">
+      <div class="line line1"></div>
+      <div class="line line2"></div>
+      <div class="tail tail1"></div>
+    </div>
+    <div class="ballpoint pen2">
+      <div class="line line1"></div>
+      <div class="line line2"></div>
+      <div class="tail tail2"></div>
+    </div>
+
     <!-- Player Selection Box -->
     <div id="playerSelection" style="position: absolute; top: 10px; left: 10px">
       <!-- Turn Status Display -->
       <div
         id="turnStatusDisplay"
-        style="margin-top: 10px; font-weight: bold; font-size: 16px"
+        style="margin-top: 10px; font-weight: bold; font-size: 16px; color: #fffaea"
       >
         Waiting for the game to start...
       </div>
@@ -52,7 +60,11 @@
       <label for="playerName">Player Name:</label>
       <input type="text" id="playerName" placeholder="Enter your name" required /><br /><br />
       <label for="boardSizeInput">Board Size:</label>
-      <input
+      <input 
+        style=
+          "font-family: Gochi Hand, serif;
+          font-weight: 400; 
+          font-style: normal"
         type="number"
         id="boardSizeInput"
         min="5"
@@ -71,7 +83,8 @@
       </div>
       <div id="lobbySection" style="margin-top: 20px">
         <label for="lobbyCodeInput">Enter Lobby Code:</label>
-        <input
+        <input style="font-family: Gochi Hand, serif;
+        font-weight: 400; font-style: normal"
           type="text"
           id="lobbyCodeInput"
           placeholder="Lobby Code"
