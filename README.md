@@ -5,7 +5,7 @@ A strategic, multiplayer dice-based board game where players take turns rolling 
 ### Teammates
 
 * **Can Hacioglu** (1354982)
-* **Berke Sevenler**
+* **Berke Sevenler** (1378788)
 * **Elvin Alirzayev**
 * **Sabina Grisi** 
 
