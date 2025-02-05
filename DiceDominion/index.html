@@ -57,6 +57,8 @@
     <div id="menu">
       <h1>Welcome to Dice Dominion</h1>
       <p>Select your preferences to start the game:</p>
+      <label for="playerName">Player Name:</label>
+      <input type="text" id="playerName" placeholder="Enter your name" required /><br /><br />
       <label for="boardSizeInput">Board Size:</label>
       <input 
         style=
@@ -102,7 +104,7 @@
       <p id="status"></p>
       <div id="controls" style="display: none">
         <p>
-          Player <span id="currentPlayerDisplay"></span>, rolled
+          <span id="currentPlayerDisplay"></span> rolled
           <span id="diceResult"></span>. Choose where to place your block:
         </p>
       </div>
@@ -114,7 +116,7 @@
         style="display: none"
         onclick="declareOtherPlayerWinner()"
       >
-        Declare Player <span id="winnerPlayerDisplay"></span> as Winner
+        Declare <span id="winnerPlayerDisplay"></span> as Winner
       </button>
       <button id="rerollButton" style="display: none" onclick="handleReroll()">
         Re-roll
