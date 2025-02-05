@@ -9,10 +9,26 @@ let myPlayerCode = 0; //to determine which player i am
 
 let lobbyCode = "TESTLOBBY";
 
+// Toggle Theme
 function toggleTheme() {
   const body = document.body;
-  body.classList.toggle("dark-mode");
+  const isDarkMode = body.classList.toggle("dark-mode");
+
+  localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+
+  console.log("Theme toggled. Dark mode:", isDarkMode);
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("theme");
+  console.log("Loaded theme:", savedTheme);
+
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark-mode");
+  }
+  document.getElementById("toggleTheme").addEventListener("click", toggleTheme);
+
+});
 
 let boardSize = 10;
 let board = [];
