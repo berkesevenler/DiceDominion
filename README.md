@@ -7,7 +7,7 @@ A strategic, multiplayer dice-based board game where players take turns rolling 
 * **Can Hacioglu** (1354982)
 * **Berke Sevenler** (1378788)
 * **Elvin Alirzayev**
-* **Sabina Grisi** 
+* **Sabina Grisi** (1292415)
 
 ## Table of contents
 
@@ -110,11 +110,12 @@ Once you open [the game in your browser](https://berkesevenler.github.io/Hosting
 ## Known issues and limitations
 
 * The game currently requires two players; no AI opponents are implemented.
-* Some UI/UX elements may need further optimization for mobile devices, and smaller screen sizes than a laptop.
+* Some UI/UX elements may need further optimization for mobile devices, and system notifications.
 * There is currently no timer implemented to avoid a turn being dragged for too long.
 * No login implemented. Free to play whenever.
-* It's not keyboard-friendly.
-* ...
+* Blocks overlap the grid
+* Not keyboard-friendly.
+* No sounds
 
 
 
@@ -147,11 +148,10 @@ This project is licensed under the MIT License.
 We would like to express our gratitude to everyone who contributed to this project, whether through feedback, testing, or coding. A special thanks to our professors and classmates for their support and insights.
 
 Our 'thank you's include the following: 
-* [Tracesoccer](https://tracesoccer.io/) to help us see what needs to be done for a cute UI design.
-* **Google** for their fonts.
+* [Tracesoccer](https://tracesoccer.io/) to help us see what needs to be done for a cute game design.
+* **Google** for their beautiful fonts.
 * **Firebase** for providing real-time database services.
 * [READMINE](https://github.com/mhucka/readmine?tab=readme-ov-file) for providing us the structure for this humble README.md file
-* ...
 
 
 Finally, we would like to acknowledge the original inspiration behind this game. It was initially conceived as a fun way for one of our team members and their partner to spend more time playing together on weekends. What started as a simple idea, just a small, lighthearted game, was brought up in our first team meeting as a potential project for this course. Since then, it has evolved from a physical game to a virtual one! And we are excited to share it with others.
