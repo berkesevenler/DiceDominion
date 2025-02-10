@@ -1,3 +1,4 @@
+import { lobbyCode } from "./gameSetup.js";
 import { listenToChanges } from "./networking.js";
 
 /**
@@ -10,7 +11,7 @@ export function initializeChat() {
       sendMessage();
     }
   });
-
+  console.log("initializing chat for lobby code "+lobbyCode);
   listenToChanges(`lobbies/${lobbyCode}/chat`, (messages) => {
     if (!messages) return;
     const chatMessages = document.getElementById("chatMessages");
