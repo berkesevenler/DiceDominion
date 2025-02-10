@@ -2,6 +2,7 @@ export let boardSize = 10;
 export let board = []; // this will be initialized later
 
 export function setBoardSize(newSize) {
+  console.log("board size changed to "+newSize);
     boardSize = newSize;
   }
   export function getBoardSize() {

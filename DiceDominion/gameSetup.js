@@ -7,7 +7,7 @@ import {
   } from "./networking.js";
   import { handlePublicLobby } from "./lobbyManager.js";
   import { setupPresenceMonitoring } from "./networking.js";
-  import { createBoard } from "./board.js";
+  import { createBoard, getBoardSize } from "./board.js";
   import { initializeChat } from "./chat.js";
   import { setBoardSize } from "./board.js";
   
@@ -35,7 +35,8 @@ import {
    */
   export function startGame(join) {
     if (join) {
-        window.myPlayerCode =2;
+      console.log("Joining game...");
+      window.myPlayerCode =2;
       // Joining an existing game
       lobbyCode = document.getElementById("lobbyCodeInput").value;
       isLobbyActive(lobbyCode).then((active) => {
@@ -46,17 +47,22 @@ import {
         }
         initializeGame(join);
       });
-    } else {
+    } 
+    else {
       // Creating a new game/lobby
-      window.myPlayerCode =1;
+      console.log("Creating game...");
+      window.myPlayerCode = 1;
       lobbyCode = generateLobbyCode();
       window.lobbyCode = lobbyCode;
+      
+      
       const sizeInput = document.getElementById("boardSizeInput").value;
-      const parsedSize = parseInt(boardSizeInput, 10) || 10; 
-    setBoardSize(parsedSize);
-    window.boardSize =parsedSize;
-      handlePublicLobby(lobbyCode, parseInt(sizeInput) || 10);
-      initializeGame(join);
+      const parsedSize = parseInt(sizeInput, 10) || 10; 
+      setBoardSize(parsedSize);
+      window.boardSize = parsedSize;
+      
+      handlePublicLobby(lobbyCode, parsedSize); 
+      initializeGame(join); 
     }
   }
   
@@ -74,86 +80,103 @@ import {
     container.style.width = "100%";
     container.style.paddingTop = "50px";
     document.getElementById("lobbyCodeDisplay").innerText = `Lobby Code: ${lobbyCode}`;
-  
+
     readData(`lobbies/${lobbyCode}/players`).then((players) => {
-      if (!players || !players.player1) {
-        // Set up Player 1.
-        myPlayerCode = 1;
-        const player1ChosenColor = document.getElementById("playerColor").value;
-        const player1ChosenName = document.getElementById("playerName").value;
-        writeData(`lobbies/${lobbyCode}/players/player1`, {
-          uid: auth.currentUser.uid,
-          name: player1ChosenName,
-          color: player1ChosenColor,
-        }).then(() => {
-          setupPresenceMonitoring(lobbyCode, 1);
-        });
-        document.documentElement.style.setProperty("--player1-color", player1ChosenColor);
-        listenToChanges(`lobbies/${lobbyCode}/players/player2/color`, (data) => {
-          document.documentElement.style.setProperty("--player2-color", data);
-        });
-        // Initialize board data.
-        writeData(`lobbies/${lobbyCode}/boardSize`, window.boardSize);
-        window.board = Array.from({ length: window.boardSize }, () =>
-          Array(window.boardSize).fill(null)
-        );
-        // Create the board and attach cell event handlers (defined in gameLogic.js).
-        import("./gameLogic.js").then((module) => {
-          createBoard({
-            onCellMouseOver: module.previewBlock,
-            onCellMouseOut: module.clearPreview,
-            onCellClick: module.placeBlock,
-          });
-        });
-        document.getElementById("status").innerText = `You are Player 1, ${player1ChosenName}!`;
-      } else if (!players.player2) {
-        //set up Player 2.
-        myPlayerCode = 2;
-        const player2ChosenColor = document.getElementById("playerColor").value;
-        const player2ChosenName = document.getElementById("playerName").value;
-        writeData(`lobbies/${lobbyCode}/players/player2`, {
-          uid: auth.currentUser.uid,
-          name: player2ChosenName,
-          color: player2ChosenColor,
-        }).then(() => {
-          setupPresenceMonitoring(lobbyCode, 2);
-        });
-        document.documentElement.style.setProperty("--player2-color", player2ChosenColor);
-        readData(`lobbies/${lobbyCode}/players/player1/color`).then((data) => {
-          document.documentElement.style.setProperty("--player1-color", data);
-        });
-        readData(`lobbies/${lobbyCode}/boardSize`).then((size) => {
-          window.boardSize = size;
-          window.board = Array.from({ length: window.boardSize }, () =>
-            Array(window.boardSize).fill(null)
-          );
-          import("./gameLogic.js").then((module) => {
-            createBoard({
-              onCellMouseOver: module.previewBlock,
-              onCellMouseOut: module.clearPreview,
-              onCellClick: module.placeBlock,
+        if (!players || !players.player1) {
+            // Set up Player 1.
+            myPlayerCode = 1;
+            const player1ChosenColor = document.getElementById("playerColor").value;
+            const player1ChosenName = document.getElementById("playerName").value;
+            writeData(`lobbies/${lobbyCode}/players/player1`, {
+                uid: auth.currentUser.uid,
+                name: player1ChosenName,
+                color: player1ChosenColor,
+            }).then(() => {
+                setupPresenceMonitoring(lobbyCode, 1);
             });
-          });
-        });
-        document.getElementById("status").innerText = `You are Player 2, ${player2ChosenName}!`;
-      } else {
-        alert("The lobby is already full!");
-        location.reload();
-        return;
-      }
-  
-      // Setup turn status and game-over displays (defined in gameLogic.js).
-      import("./gameLogic.js").then((module) => {
-        module.displayTurnStatus(lobbyCode);
-        module.displayGameOver(lobbyCode);
-        writeData(`lobbies/${lobbyCode}/gameOver`, 0);
-        if (myPlayerCode === 1) {
-          writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
+            document.documentElement.style.setProperty("--player1-color", player1ChosenColor);
+            listenToChanges(`lobbies/${lobbyCode}/players/player2/color`, (data) => {
+                document.documentElement.style.setProperty("--player2-color", data);
+            });
+
+            // Initialize board data.
+            const boardSize = getBoardSize(); // Get the board size from the input or default
+            writeData(`lobbies/${lobbyCode}/boardSize`, boardSize).then(() => {
+                window.boardSize = boardSize; // Set the board size for Player 1
+                window.board = Array.from({ length: boardSize }, () =>
+                    Array(boardSize).fill(null)
+                );
+
+                // Create the board and attach cell event handlers (defined in gameLogic.js).
+                import("./gameLogic.js").then((module) => {
+                    createBoard({
+                        onCellMouseOver: module.previewBlock,
+                        onCellMouseOut: module.clearPreview,
+                        onCellClick: module.placeBlock,
+                    });
+                });
+            });
+
+            document.getElementById("status").innerText = `You are Player 1, ${player1ChosenName}!`;
+        } else if (!players.player2) {
+            // Set up Player 2.
+            myPlayerCode = 2;
+            const player2ChosenColor = document.getElementById("playerColor").value;
+            const player2ChosenName = document.getElementById("playerName").value;
+            writeData(`lobbies/${lobbyCode}/players/player2`, {
+                uid: auth.currentUser.uid,
+                name: player2ChosenName,
+                color: player2ChosenColor,
+            }).then(() => {
+                setupPresenceMonitoring(lobbyCode, 2);
+                window.lobbyCode=lobbyCode;
+            });
+            document.documentElement.style.setProperty("--player2-color", player2ChosenColor);
+            readData(`lobbies/${lobbyCode}/players/player1/color`).then((data) => {
+                document.documentElement.style.setProperty("--player1-color", data);
+            });
+
+            // Read the board size from the database and initialize the board.
+            readData(`lobbies/${lobbyCode}/boardSize`).then((size) => {
+                if (!size) {
+                    console.error("Board size not found in the database!");
+                    return;
+                }
+                window.boardSize = size; // Set the board size for Player 2
+                setBoardSize(size);
+                window.board = Array.from({ length: size }, () =>
+                    Array(size).fill(null)
+                );
+
+                // Create the board and attach cell event handlers (defined in gameLogic.js).
+                import("./gameLogic.js").then((module) => {
+                    createBoard({
+                        onCellMouseOver: module.previewBlock,
+                        onCellMouseOut: module.clearPreview,
+                        onCellClick: module.placeBlock,
+                    });
+                });
+            });
+
+            document.getElementById("status").innerText = `You are Player 2, ${player2ChosenName}!`;
+        } else {
+            alert("The lobby is already full!");
+            location.reload();
+            return;
         }
-      });
+
+        // Setup turn status and game-over displays (defined in gameLogic.js).
+        import("./gameLogic.js").then((module) => {
+            module.displayTurnStatus(lobbyCode);
+            module.displayGameOver(lobbyCode);
+            writeData(`lobbies/${lobbyCode}/gameOver`, 0);
+            if (myPlayerCode === 1) {
+                writeData(`lobbies/${lobbyCode}/turnStatus`, 1);
+            }
+        });
     });
-    // show the chat UI and initialize it.
+
+    // Show the chat UI and initialize it.
     document.getElementById("chatContainer").style.display = "block";
     initializeChat(lobbyCode);
-  }
-  
+}
