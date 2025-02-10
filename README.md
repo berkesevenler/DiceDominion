@@ -1,4 +1,4 @@
-# DICE DOMINION
+# DICE DOMINION (Game URL: https://berkesevenler.github.io/Hosting-DD/)
 
 A strategic, multiplayer dice-based board game where players take turns rolling two ***DICE***, placing blocks whose size is based on the results of the dice on a grid, and place as many as possible in an attempt to ***DOMINATE*** the board! Play against friends in private or public lobbies and destroy them!
 
@@ -72,7 +72,7 @@ This will start the game, and you can access it via http://localhost:3000.
 
 ### Starting the Game
 
-Once you open [the game in your browser], you'll be greeted with the game board. You can either:
+Once you open [the game in your browser](https://berkesevenler.github.io/Hosting-DD/), you'll be greeted with the game board. You can either:
 
 1. **Create a Lobby:** Choose the grid size, select a color for your blocks, and start a lobby. You will then wait for another player to join, either through an invitation link or by finding your lobby in the public list.
 2. **Join a Lobby:** Select your color and join an existing lobby by either clicking an invitation link or selecting a public lobby.
