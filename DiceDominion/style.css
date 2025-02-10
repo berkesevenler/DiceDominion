@@ -414,13 +414,11 @@ body.dark-mode #messageInput {
   border: 1px solid #444;
   color: #fffaea;
 }
-=======
-#rerollButton {
-  background-color: #ffa41c;
-}
 
+#rerollButton {
+  background-color: #e0ab49;
+}
 #rerollButton:hover {
-  background-color: #ff8c00;
   transform: scale(1.05);
 }
 
