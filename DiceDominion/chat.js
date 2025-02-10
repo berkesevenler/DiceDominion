@@ -3,11 +3,11 @@ import { listenToChanges } from "./networking.js";
 /**
  * Initializes the chat system for the given lobby.
  */
-export function initializeChat(lobbyCode) {
+export function initializeChat() {
   const messageInput = document.getElementById("messageInput");
   messageInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
-      sendMessage(lobbyCode);
+      sendMessage();
     }
   });
 
@@ -48,13 +48,13 @@ export function initializeChat(lobbyCode) {
 /**
  * Sends a chat message.
  */
-export function sendMessage(lobbyCode) {
+export function sendMessage() {
   const messageInput = document.getElementById("messageInput");
   const message = messageInput.value.trim();
   const playerName = document.getElementById("playerName").value;
 
   if (message) {
-    const chatRef = firebase.database().ref(`lobbies/${lobbyCode}/chat`).push();
+    const chatRef = firebase.database().ref(`lobbies/${window.lobbyCode}/chat`).push();
     chatRef.set({
       player: window.myPlayerCode,
       name: playerName,

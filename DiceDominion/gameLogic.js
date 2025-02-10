@@ -22,6 +22,11 @@ export const rerollCount = {
   2: 0,
 };
 
+export function rotate(){
+  rotation = (rotation + 90) % 360;
+ clearPreview();
+}
+
 /**
  * Sets up a listener for turn changes.
  */
