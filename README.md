@@ -6,7 +6,7 @@ A strategic, multiplayer dice-based board game where players take turns rolling 
 
 * **Can Hacioglu** (1354982)
 * **Berke Sevenler** (1378788)
-* **Elvin Alirzayev**
+* **Elvin Alirzayev** (1299584)
 * **Sabina Grisi** (1292415)
 
 ## Table of contents
